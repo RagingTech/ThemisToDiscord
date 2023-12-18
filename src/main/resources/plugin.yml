@@ -1,0 +1,6 @@
+name: ThemisToDiscord
+version: '${project.version}'
+main: xyz.earthcow.themistodiscord.ThemisToDiscord
+api-version: '1.20'
+depend:
+  - Themis
