@@ -4,3 +4,12 @@ main: xyz.earthcow.themistodiscord.ThemisToDiscord
 api-version: '1.20'
 depend:
   - Themis
+
+commands:
+  ttd:
+    usage: §c/<command> <url | test> [<url>]
+    permission: themistodiscord.ttd
+
+permissions:
+  themistodiscord.tdd:
+    description: Allows access to the /tdd command
