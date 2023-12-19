@@ -59,6 +59,10 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.GREEN + "Message was sent. Id: " + readonlyMessage.getId());
                 });
             }
+            case "reload" -> {
+                ThemisToDiscord.config.load();
+                sender.sendMessage(ChatColor.GREEN + "Successfully reloaded the configuration file!");
+            }
             default -> {
                 return false;
             }
@@ -70,7 +74,7 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("url", "test");
+            return Arrays.asList("url", "test", "reload");
         }
         return new ArrayList<>();
     }

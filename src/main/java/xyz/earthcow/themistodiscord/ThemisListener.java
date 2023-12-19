@@ -41,7 +41,7 @@ public class ThemisListener implements Listener {
         String tps = matcher.find() ? matcher.group(1) : null;
 
         if (playerName == null || category == null || score == null || ping == null || tps == null) {
-            ThemisToDiscord.instance.getLogger().warning("Themis message was not sent to discord due lack of regex matches");
+            ThemisToDiscord.instance.getLogger().severe("Themis message was not sent to discord due to lack of regex matches");
             return;
         }
 
