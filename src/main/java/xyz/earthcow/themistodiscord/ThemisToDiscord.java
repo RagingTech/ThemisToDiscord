@@ -11,12 +11,13 @@ import java.util.Objects;
 public final class ThemisToDiscord extends JavaPlugin {
     public static ThemisToDiscord instance;
     public static WebhookClient client;
+    public static Configuration config;
 
     @Override
     public void onEnable() {
         instance = this;
 
-        saveDefaultConfig();
+        config = new Configuration();
 
         WebhookClient.setDefaultErrorHandler((client, message, throwable) -> {
             getLogger().severe(String.format("[%s] %s%n", client.getId(), message));
@@ -34,14 +35,7 @@ public final class ThemisToDiscord extends JavaPlugin {
         Objects.requireNonNull(getCommand("ttd")).setExecutor(ttdCommand);
         Objects.requireNonNull(getCommand("ttd")).setTabCompleter(ttdCommand);
 
-        String webhookUrl = getConfig().getString("webhookUrl");
-
-        if (isInvalidWebhookUrl(webhookUrl)) {
-            getLogger().warning("Webhook url is missing or invalid! Set one using /ttd url <url>");
-            return;
-        }
-
-        initializeWebhook(webhookUrl);
+        getServer().getPluginManager().registerEvents(new ThemisListener(), this);
 
     }
 
@@ -57,7 +51,7 @@ public final class ThemisToDiscord extends JavaPlugin {
         return !WebhookClientBuilder.WEBHOOK_PATTERN.matcher(url).matches();
     }
 
-    public static void initializeWebhook(String webhookUrl) {
+    public static void initializeWebhook(@Nullable String webhookUrl) {
         if (isInvalidWebhookUrl(webhookUrl)) return;
 
         WebhookClientBuilder builder = new WebhookClientBuilder(webhookUrl);
@@ -69,7 +63,7 @@ public final class ThemisToDiscord extends JavaPlugin {
         });
         builder.setWait(true);
 
-        if (client != null) {
+        if (client != null && !client.isShutdown()) {
             client.close();
         }
 

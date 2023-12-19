@@ -31,14 +31,16 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.RED + "That is not a valid webhook url!");
                     return true;
                 }
+                ThemisToDiscord.config.webhookUrl = webhookUrl;
                 ThemisToDiscord.instance.getConfig().set("webhookUrl", webhookUrl);
                 ThemisToDiscord.instance.saveConfig();
-                ThemisToDiscord.initializeWebhook(args[1]);
+                ThemisToDiscord.initializeWebhook(webhookUrl);
+                sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
             }
             case "test" -> {
                 WebhookClient client = ThemisToDiscord.client;
                 if (client == null || client.isShutdown()) {
-                    sender.sendMessage(ChatColor.RED + "Client is not initialized!");
+                    sender.sendMessage(ChatColor.RED + "There is no active client. Use /ttd url <url> to specify the webhook url.");
                     return true;
                 }
                 WebhookEmbed embed = new WebhookEmbedBuilder()
@@ -67,9 +69,9 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
-        if (args.length == 0) {
+        if (args.length == 1) {
             return Arrays.asList("url", "test");
         }
-        return null;
+        return new ArrayList<>();
     }
 }

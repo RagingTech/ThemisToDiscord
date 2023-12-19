@@ -7,3 +7,23 @@
 
 # Replace this with your webhook url
 webhookUrl: copy your webhook url here
+
+# Specify the embed color for each hack category
+categoryColors:
+  Boat Movement: "#875229"
+  Flight / Y-Movement: "#3276bf"
+  Speed: "#d6e600"
+  Spoofed Packets: "#ff0000"
+  Timer / Blink: "#d61ad6"
+  Reach: "#6f1ad6"
+  Elytra Flight: "#afaeb0"
+
+
+# Advanced users only!
+# Regex patterns for the themis notification message
+regex:
+  playerName: "\\[Themis\\] (.*?) was"
+  hackCategory: "for (.*?) hacks"
+  score: "Score: (.*?) \\|"
+  ping: "Ping: (.*?) \\|"
+  tps: "TPS: (.*?)\\]"
