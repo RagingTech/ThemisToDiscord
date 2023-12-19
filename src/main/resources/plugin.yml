@@ -11,5 +11,5 @@ commands:
     permission: themistodiscord.ttd
 
 permissions:
-  themistodiscord.tdd:
-    description: Allows access to the /tdd command
+  themistodiscord.ttd:
+    description: Allows access to the /ttd command
