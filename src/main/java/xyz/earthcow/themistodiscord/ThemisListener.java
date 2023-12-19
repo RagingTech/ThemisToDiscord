@@ -50,6 +50,7 @@ public class ThemisListener implements Listener {
 
         WebhookEmbed embed = new WebhookEmbedBuilder()
                 .setColor(config.categoryColors.getOrDefault(category, Color.GRAY).getRGB())
+                .setTitle(new WebhookEmbed.EmbedTitle(category, null))
                 .setDescription("Themis flagged " + playerName + " for " + category + " hacks!")
                 .setAuthor(new WebhookEmbed.EmbedAuthor(playerName, null, null))
                 .addField(new WebhookEmbed.EmbedField(true, "Score", score))
