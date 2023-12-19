@@ -1,6 +1,6 @@
 # ThemisToDiscord
 
-Sends an embeded Themis notification to a discord webhook.
+Sends an embedded Themis notification to a discord webhook.
 
 ## Installation
 
