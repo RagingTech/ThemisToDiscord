@@ -15,6 +15,25 @@ public class Configuration {
 
     public Configuration() {
         ThemisToDiscord.instance.saveDefaultConfig();
+        FileConfiguration fileConfig = ThemisToDiscord.instance.getConfig();
+        fileConfig.addDefault("categoryColors.Boat Movement", "#875229");
+        fileConfig.addDefault("categoryColors.Flight / Y-Movement", "#3276bf");
+        fileConfig.addDefault("categoryColors.Speed", "#d6e600");
+        fileConfig.addDefault("categoryColors.Spoofed Packets", "#ff000");
+        fileConfig.addDefault("categoryColors.Timer / Blink", "#d61ad6");
+        fileConfig.addDefault("categoryColors.Reach", "#6f1ad6");
+        fileConfig.addDefault("categoryColors.Elytra Flight", "#afaeb0");
+        fileConfig.addDefault("categoryColors.Illegal Packets", "#141414");
+
+        fileConfig.addDefault("regex.playerName", "\\[Themis\\] (.*?) was");
+        fileConfig.addDefault("regex.hackCategory", "for (.*?) hacks");
+        fileConfig.addDefault("regex.score", "Score: (.*?) \\|");
+        fileConfig.addDefault("regex.ping", "Ping: (.*?) \\|");
+        fileConfig.addDefault("regex.tps", "TPS: (.*?)\\]");
+
+        fileConfig.options().copyDefaults(true);
+        ThemisToDiscord.instance.saveConfig();
+
         load();
     }
     public void load() {
@@ -39,6 +58,7 @@ public class Configuration {
             categoryColors.put("Timer / Blink", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Timer / Blink"))));
             categoryColors.put("Reach", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Reach"))));
             categoryColors.put("Elytra Flight", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Elytra Flight"))));
+            categoryColors.put("Illegal Packets", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Illegal Packets"))));
         } catch (Exception ignored) {
             ThemisToDiscord.instance.getLogger().warning("Invalid colors in the config file. Using default values.");
             categoryColors.clear();
@@ -49,6 +69,7 @@ public class Configuration {
             categoryColors.put("Timer / Blink", Color.decode("#d61ad6"));
             categoryColors.put("Reach", Color.decode("#6f1ad6"));
             categoryColors.put("Elytra Flight", Color.decode("#afaeb0"));
+            categoryColors.put("Illegal Packets", Color.decode("#141414"));
         }
 
         regexPatterns.clear();
