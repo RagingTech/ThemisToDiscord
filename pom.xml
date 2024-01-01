@@ -6,7 +6,7 @@
 
     <groupId>xyz.earthcow</groupId>
     <artifactId>ThemisToDiscord</artifactId>
-    <version>0.1.3</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <name>ThemisToDiscord</name>
@@ -74,7 +74,7 @@
         <dependency>
             <groupId>com.gmail.olexorus.themis.api</groupId>
             <artifactId>ThemisAPI</artifactId>
-            <version>0.14.0</version>
+            <version>0.15.3</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/bin/ThemisAPI.jar</systemPath>
         </dependency>

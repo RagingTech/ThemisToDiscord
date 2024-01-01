@@ -20,9 +20,9 @@ public final class ThemisToDiscord extends JavaPlugin {
         config = new Configuration();
 
         WebhookClient.setDefaultErrorHandler((client, message, throwable) -> {
-            getLogger().severe(String.format("[%s] %s%n", client.getId(), message));
 
             if (throwable instanceof HttpException ex && ex.getCode() == 404) {
+                getLogger().severe("Websocket failed with a 404 error. This likely means your websocket url is not valid. Please replace with /ttd url <url>");
                 client.close();
                 return;
             }

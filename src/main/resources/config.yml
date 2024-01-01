@@ -8,6 +8,13 @@
 # Replace this with your webhook url
 webhookUrl: copy your webhook url here
 
+# What is the minimum score for a notification to be sent to the discord?
+execution-threshold: 10.0
+# What amount of new violations need to happen before another notification is sent?
+repetition-threshold: 5.0
+# What amount of time needs to pass before another notification is sent?
+repetition-delay: 10.0
+
 # Specify the embed color for each hack category
 categoryColors:
   Boat Movement: "#875229"
@@ -18,13 +25,3 @@ categoryColors:
   Reach: "#6f1ad6"
   Elytra Flight: "#afaeb0"
   Illegal Packets: "#141414"
-
-
-# Advanced users only!
-# Regex patterns for the themis notification message
-regex:
-  playerName: "\\[Themis\\] (.*?) was"
-  hackCategory: "for (.*?) hacks"
-  score: "Score: (.*?) \\|"
-  ping: "Ping: (.*?) \\|"
-  tps: "TPS: (.*?)\\]"
