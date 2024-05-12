@@ -1,18 +1,15 @@
 package xyz.earthcow.themistodiscord;
 
-import club.minnced.discord.webhook.send.WebhookEmbed;
-import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import com.gmail.olexorus.themis.api.CheckType;
 import com.gmail.olexorus.themis.api.ThemisApi;
 import com.gmail.olexorus.themis.api.ViolationEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.TemporalAccessor;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
@@ -24,11 +21,6 @@ public class ThemisListener implements Listener {
 
     @EventHandler
     public void onViolationEvent(ViolationEvent event) {
-        if (ThemisToDiscord.client == null || ThemisToDiscord.client.isShutdown()) {
-            ThemisToDiscord.instance.getLogger().severe("Themis message was not sent to discord because there is no active client. Use /ttd url <url> to specify the webhook url.");
-            return;
-        }
-
         Configuration config = ThemisToDiscord.config;
         Player player = event.getPlayer();
         UUID playerUUID = player.getUniqueId();
@@ -54,9 +46,6 @@ public class ThemisListener implements Listener {
 
         if (repetitionCountersForPlayer.get(checkType) != -1) return;
 
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        TemporalAccessor currentTimestamp = currentDateTime.atZone(ZoneId.systemDefault());
-
         String ping = "NA";
         String tps = "NA";
         if (pingSupportedVersion) {
@@ -71,18 +60,20 @@ public class ThemisListener implements Listener {
 
         String checkTypeStr = checkType.getDescription();
 
-        WebhookEmbed embed = new WebhookEmbedBuilder()
-                .setColor(config.categoryColors.getOrDefault(checkTypeStr, Color.GRAY).getRGB())
-                .setTitle(new WebhookEmbed.EmbedTitle(checkTypeStr, null))
-                .setDescription("Themis flagged " + player.getName() + " for " + checkTypeStr + " hacks!")
-                .setAuthor(new WebhookEmbed.EmbedAuthor(player.getName(), null, null))
-                .addField(new WebhookEmbed.EmbedField(true, "Score", "" + score))
-                .addField(new WebhookEmbed.EmbedField(true, "Ping", ping))
-                .addField(new WebhookEmbed.EmbedField(true, "TPS", tps))
-                .setTimestamp(currentTimestamp)
-                .build();
+        DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
 
-        ThemisToDiscord.client.send(embed);
+        embed
+                .setColor(config.categoryColors.getOrDefault(checkTypeStr, Color.GRAY))
+                .setTitle(checkTypeStr)
+                .setDescription("Themis flagged " + player.getName() + " for " + checkTypeStr + " hacks!")
+                .setAuthor(player.getName(), null, null)
+                .addField("Score", "" + score, true)
+                .addField("Ping", ping, true)
+                .addField("TPS", tps, true)
+                .setTimestamp((new Date()).toInstant());
+
+        ThemisToDiscord.executeWebhook(embed, null);
+
         lastSentTimesForPlayer.put(checkType, System.currentTimeMillis());
         lastSentTimesPerPlayer.put(playerUUID, lastSentTimesForPlayer);
     }

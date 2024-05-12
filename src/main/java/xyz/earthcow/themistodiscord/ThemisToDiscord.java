@@ -1,16 +1,17 @@
 package xyz.earthcow.themistodiscord;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.WebhookClientBuilder;
-import club.minnced.discord.webhook.exception.HttpException;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.earthcow.discordwebhook.DiscordWebhook;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public final class ThemisToDiscord extends JavaPlugin {
     public static ThemisToDiscord instance;
-    public static WebhookClient client;
     public static Configuration config;
 
     @Override
@@ -18,18 +19,6 @@ public final class ThemisToDiscord extends JavaPlugin {
         instance = this;
 
         config = new Configuration();
-
-        WebhookClient.setDefaultErrorHandler((client, message, throwable) -> {
-
-            if (throwable instanceof HttpException ex && ex.getCode() == 404) {
-                getLogger().severe("Websocket failed with a 404 error. This likely means your websocket url is not valid. Please replace with /ttd url <url>");
-                client.close();
-                return;
-            }
-
-            if (throwable != null)
-                throwable.printStackTrace();
-        });
 
         TtdCommand ttdCommand = new TtdCommand();
         Objects.requireNonNull(getCommand("ttd")).setExecutor(ttdCommand);
@@ -40,33 +29,38 @@ public final class ThemisToDiscord extends JavaPlugin {
     }
 
     @Override
-    public void onDisable() {
-        if (client != null && !client.isShutdown()) {
-            client.close();
-        }
-    }
+    public void onDisable() {}
 
     public static boolean isInvalidWebhookUrl(@Nullable String url) {
         if (url == null) return true;
-        return !WebhookClientBuilder.WEBHOOK_PATTERN.matcher(url).matches();
+        return !DiscordWebhook.WEBHOOK_PATTERN.matcher(url).matches();
     }
 
-    public static void initializeWebhook(@Nullable String webhookUrl) {
-        if (isInvalidWebhookUrl(webhookUrl)) return;
-
-        WebhookClientBuilder builder = new WebhookClientBuilder(webhookUrl);
-        builder.setThreadFactory((job) -> {
-            Thread thread = new Thread(job);
-            thread.setName("ThemisWebhookThread");
-            thread.setDaemon(true);
-            return thread;
-        });
-        builder.setWait(true);
-
-        if (client != null && !client.isShutdown()) {
-            client.close();
+    public static void executeWebhook(@NotNull DiscordWebhook.EmbedObject embed, @Nullable CommandSender sender) {
+        if (isInvalidWebhookUrl(config.webhookUrl)) {
+            if (sender != null) {
+                sender.sendMessage(ChatColor.RED + "There is a problem with your configuration! Verify the webhook url and all config values.");
+            }
+            instance.getLogger().warning("There is a problem with your configuration! Verify the webhook url and all config values.");
+            return;
         }
 
-        client = builder.build();
+        DiscordWebhook webhook = new DiscordWebhook(config.webhookUrl);
+
+        webhook.addEmbed(embed);
+
+        instance.getServer().getScheduler().runTaskAsynchronously(instance, () -> {
+            try {
+                webhook.execute();
+                if (sender != null) {
+                    sender.sendMessage(ChatColor.GREEN + "Message was sent!");
+                }
+            } catch (IOException e) {
+                if (sender != null) {
+                    sender.sendMessage(ChatColor.RED + "There is a problem with your configuration! Verify the webhook url and all config values.");
+                }
+                instance.getLogger().warning("There is a problem with your configuration! Verify the webhook url and all config values.");
+            }
+        });
     }
 }

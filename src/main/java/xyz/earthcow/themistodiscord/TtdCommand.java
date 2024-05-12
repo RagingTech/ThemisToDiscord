@@ -1,8 +1,5 @@
 package xyz.earthcow.themistodiscord;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.send.WebhookEmbed;
-import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,7 +7,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.earthcow.discordwebhook.DiscordWebhook;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,30 +33,18 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 ThemisToDiscord.config.webhookUrl = webhookUrl;
                 ThemisToDiscord.instance.getConfig().set("webhookUrl", webhookUrl);
                 ThemisToDiscord.instance.saveConfig();
-                ThemisToDiscord.initializeWebhook(webhookUrl);
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
             }
             case "test" -> {
-                WebhookClient client = ThemisToDiscord.client;
-                if (client == null || client.isShutdown()) {
-                    sender.sendMessage(ChatColor.RED + "There is no active client. Use /ttd url <url> to specify the webhook url.");
-                    return true;
-                }
-                WebhookEmbed embed = new WebhookEmbedBuilder()
-                        .setColor(0x00FF00)
-                        .setAuthor(new WebhookEmbed.EmbedAuthor(sender.getName(), null, null))
-                        .setTitle(new WebhookEmbed.EmbedTitle("ThemisToDiscord Test", null))
-                        .setDescription("Testing the ThemisToDiscord webhook functionality")
-                        .build();
+                DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
+                embed
+                        .setColor(Color.GREEN)
+                        .setAuthor(sender.getName(), null, null)
+                        .setTitle("ThemisToDiscord Test")
+                        .setDescription("Testing the ThemisToDiscord webhook functionality");
 
                 sender.sendMessage(ChatColor.AQUA + "Sending test message...");
-                client.send(embed).whenComplete((readonlyMessage, throwable) -> {
-                    if (readonlyMessage == null || throwable != null) {
-                        sender.sendMessage(ChatColor.RED + "Message failed to send.");
-                        return;
-                    }
-                    sender.sendMessage(ChatColor.GREEN + "Message was sent. Id: " + readonlyMessage.getId());
-                });
+                ThemisToDiscord.executeWebhook(embed, sender);
             }
             case "reload" -> {
                 ThemisToDiscord.config.load();

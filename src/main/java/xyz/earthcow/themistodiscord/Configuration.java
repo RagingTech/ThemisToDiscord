@@ -43,8 +43,6 @@ public class Configuration {
 
         if (ThemisToDiscord.isInvalidWebhookUrl(webhookUrl)) {
             ThemisToDiscord.instance.getLogger().warning("Webhook url is missing or invalid! Set one using /ttd url <url>");
-        } else {
-            ThemisToDiscord.initializeWebhook(webhookUrl);
         }
 
         executionThreshold = fileConfig.getDouble("execution-threshold");
