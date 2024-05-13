@@ -7,7 +7,7 @@ depend:
 
 commands:
   ttd:
-    usage: §c/<command> <url | test> [<url>]
+    usage: §c/<command> <url | test | reload> [<url>]
     permission: themistodiscord.ttd
 
 permissions:
