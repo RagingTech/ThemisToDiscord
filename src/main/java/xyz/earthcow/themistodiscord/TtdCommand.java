@@ -20,7 +20,7 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
         if (args.length < 1) return false;
 
         switch (args[0]) {
-            case "url" -> {
+            case "url":
                 if (args.length < 2) {
                     sender.sendMessage(ChatColor.RED + "/ttd url <url>");
                     return true;
@@ -34,8 +34,8 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 ThemisToDiscord.instance.getConfig().set("webhookUrl", webhookUrl);
                 ThemisToDiscord.instance.saveConfig();
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
-            }
-            case "test" -> {
+                break;
+            case "test":
                 DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
                 embed
                         .setColor(Color.GREEN)
@@ -45,14 +45,13 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
 
                 sender.sendMessage(ChatColor.AQUA + "Sending test message...");
                 ThemisToDiscord.executeWebhook(embed, sender);
-            }
-            case "reload" -> {
+                break;
+            case "reload":
                 ThemisToDiscord.config.load();
                 sender.sendMessage(ChatColor.GREEN + "Successfully reloaded the configuration file!");
-            }
-            default -> {
+                break;
+            default:
                 return false;
-            }
         }
         return true;
     }
