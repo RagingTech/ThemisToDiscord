@@ -41,7 +41,7 @@ public class Configuration {
         FileConfiguration fileConfig = ThemisToDiscord.instance.getConfig();
 
         webhookUrl = fileConfig.getString("webhookUrl");
-        embedMessage = fileConfig.getString("embed_message", "Themis flagged {player} for {checkType} hacks!");
+        embedMessage = fileConfig.getString("embed_message");
 
         if (ThemisToDiscord.isInvalidWebhookUrl(webhookUrl)) {
             ThemisToDiscord.instance.getLogger().warning("Webhook url is missing or invalid! Set one using /ttd url <url>");
