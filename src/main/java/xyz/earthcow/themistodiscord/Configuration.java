@@ -8,6 +8,7 @@ import java.util.Objects;
 
 public class Configuration {
     public String webhookUrl;
+    public String embedMessage;
 
     public double executionThreshold;
     public double repetitionThreshold;
@@ -40,6 +41,7 @@ public class Configuration {
         FileConfiguration fileConfig = ThemisToDiscord.instance.getConfig();
 
         webhookUrl = fileConfig.getString("webhookUrl");
+        embedMessage = fileConfig.getString("embed_message", "Themis flagged {player} for {checkType} hacks!");
 
         if (ThemisToDiscord.isInvalidWebhookUrl(webhookUrl)) {
             ThemisToDiscord.instance.getLogger().warning("Webhook url is missing or invalid! Set one using /ttd url <url>");

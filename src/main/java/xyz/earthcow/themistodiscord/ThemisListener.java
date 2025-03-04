@@ -59,13 +59,16 @@ public class ThemisListener implements Listener {
         }
 
         String checkTypeStr = checkType.getDescription();
+        String embedMessage = config.embedMessage
+                .replace("{player}", player.getName())
+                .replace("{checkType}", checkTypeStr);
 
         DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
 
         embed
                 .setColor(config.categoryColors.getOrDefault(checkTypeStr, Color.GRAY))
                 .setTitle(checkTypeStr)
-                .setDescription("Themis flagged " + player.getName() + " for " + checkTypeStr + " hacks!")
+                .setDescription(embedMessage)
                 .setAuthor(player.getName(), null, null)
                 .addField("Score", "" + score, true)
                 .addField("Ping", ping, true)
