@@ -25,3 +25,5 @@ categoryColors:
   Reach: "#6f1ad6"
   Elytra Flight: "#afaeb0"
   Illegal Packets: "#141414"
+
+config-version: 2
