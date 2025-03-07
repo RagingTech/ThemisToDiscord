@@ -38,6 +38,10 @@ public final class ThemisToDiscord extends JavaPlugin {
 
     public static void log(LogLevel logLevel, String message) {
         switch (logLevel) {
+            case DEBUG:
+                if (config.get().getBoolean("debug")) {
+                    instance.getLogger().warning("[DEBUG] " + message);
+                }
             case WARN:
                 instance.getLogger().warning(message);
                 break;
@@ -56,7 +60,7 @@ public final class ThemisToDiscord extends JavaPlugin {
     }
 
     public static void executeWebhook(@NotNull DiscordWebhook.EmbedObject embed, @Nullable CommandSender sender) {
-        if (isInvalidWebhookUrl(config.webhookUrl)) {
+        if (isInvalidWebhookUrl(config.get().getString("webhookUrl"))) {
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 sender.sendMessage(ChatColor.RED + "Webhook url is missing or invalid! Set one using /ttd url <url>");
             }
@@ -64,7 +68,7 @@ public final class ThemisToDiscord extends JavaPlugin {
             return;
         }
 
-        DiscordWebhook webhook = new DiscordWebhook(config.webhookUrl);
+        DiscordWebhook webhook = new DiscordWebhook(config.get().getString("webhookUrl"));
 
         webhook.addEmbed(embed);
 

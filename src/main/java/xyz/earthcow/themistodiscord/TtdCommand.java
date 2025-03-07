@@ -30,9 +30,8 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.RED + "That is not a valid webhook url!");
                     return true;
                 }
-                ThemisToDiscord.config.webhookUrl = webhookUrl;
-                ThemisToDiscord.instance.getConfig().set("webhookUrl", webhookUrl);
-                ThemisToDiscord.instance.saveConfig();
+                ThemisToDiscord.config.get().set("webhookUrl", webhookUrl);
+                ThemisToDiscord.config.save();
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
                 break;
             case "test":
@@ -47,7 +46,7 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 ThemisToDiscord.executeWebhook(embed, sender);
                 break;
             case "reload":
-                ThemisToDiscord.config.load();
+                ThemisToDiscord.config.reload();
                 sender.sendMessage(ChatColor.GREEN + "Successfully reloaded the configuration file!");
                 break;
             default:

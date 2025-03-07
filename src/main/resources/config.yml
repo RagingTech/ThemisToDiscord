@@ -26,4 +26,5 @@ categoryColors:
   Elytra Flight: "#afaeb0"
   Illegal Packets: "#141414"
 
+debug: false
 config-version: 2

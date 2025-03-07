@@ -1,75 +1,68 @@
 package xyz.earthcow.themistodiscord;
 
-import org.bukkit.configuration.file.FileConfiguration;
+import dev.dejvokep.boostedyaml.YamlDocument;
+import dev.dejvokep.boostedyaml.dvs.versioning.BasicVersioning;
+import dev.dejvokep.boostedyaml.settings.dumper.DumperSettings;
+import dev.dejvokep.boostedyaml.settings.general.GeneralSettings;
+import dev.dejvokep.boostedyaml.settings.loader.LoaderSettings;
+import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 
-import java.awt.*;
-import java.util.HashMap;
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 public class Configuration {
-    public String webhookUrl;
-
-    public double executionThreshold;
-    public double repetitionThreshold;
-    public double repetitionDelay;
-    public final HashMap<String, Color> categoryColors = new HashMap<>();
+    private final ThemisToDiscord plugin;
+    private YamlDocument config;
 
     public Configuration() {
-        ThemisToDiscord.instance.saveDefaultConfig();
-        FileConfiguration fileConfig = ThemisToDiscord.instance.getConfig();
-        fileConfig.addDefault("execution-threshold", 10.0);
-        fileConfig.addDefault("repetition-threshold", 5.0);
-        fileConfig.addDefault("repetition-delay", 10.0);
+        this.plugin = ThemisToDiscord.instance;
 
-        fileConfig.addDefault("categoryColors.Boat Movement", "#875229");
-        fileConfig.addDefault("categoryColors.Flight / Y-Movement", "#3276bf");
-        fileConfig.addDefault("categoryColors.Speed", "#d6e600");
-        fileConfig.addDefault("categoryColors.Spoofed Packets", "#ff000");
-        fileConfig.addDefault("categoryColors.Timer / Blink", "#d61ad6");
-        fileConfig.addDefault("categoryColors.Reach", "#6f1ad6");
-        fileConfig.addDefault("categoryColors.Elytra Flight", "#afaeb0");
-        fileConfig.addDefault("categoryColors.Illegal Packets", "#141414");
+        try {
+            config = YamlDocument.create(
+                    new File(plugin.getDataFolder(), "config.yml"),
+                    Objects.requireNonNull(plugin.getResource("config.yml")),
+                    GeneralSettings.DEFAULT,
+                    LoaderSettings.builder().setAutoUpdate(true).build(), DumperSettings.DEFAULT,
+                    UpdaterSettings.builder().setVersioning(new BasicVersioning("config-version"))
+                            .setOptionSorting(UpdaterSettings.OptionSorting.SORT_BY_DEFAULTS)
+                            .build()
+            );
 
-        fileConfig.options().copyDefaults(true);
-        ThemisToDiscord.instance.saveConfig();
+            config.update();
+            config.save();
+        } catch (IOException e){
+            ThemisToDiscord.log(LogLevel.ERROR, "Could not create/load plugin config, disabling! Additional info: \n" + e);
+            plugin.getPluginLoader().disablePlugin(plugin);
+            return;
+        }
 
-        load();
-    }
-    public void load() {
-        ThemisToDiscord.instance.reloadConfig();
-        FileConfiguration fileConfig = ThemisToDiscord.instance.getConfig();
-
-        webhookUrl = fileConfig.getString("webhookUrl");
-
-        if (ThemisToDiscord.isInvalidWebhookUrl(webhookUrl)) {
+        if (ThemisToDiscord.isInvalidWebhookUrl(config.getString("webhookUrl"))) {
             ThemisToDiscord.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
         }
+    }
 
-        executionThreshold = fileConfig.getDouble("execution-threshold");
-        repetitionThreshold = fileConfig.getDouble("repetition-threshold");
-        repetitionDelay = fileConfig.getDouble("repetition-delay");
+    public YamlDocument get() {
+        return config;
+    }
 
-        categoryColors.clear();
+    public void save() {
         try {
-            categoryColors.put("Boat Movement", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Boat Movement"))));
-            categoryColors.put("Flight / Y-Movement", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Boat Movement"))));
-            categoryColors.put("Speed", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Speed"))));
-            categoryColors.put("Spoofed Packets", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Spoofed Packets"))));
-            categoryColors.put("Timer / Blink", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Timer / Blink"))));
-            categoryColors.put("Reach", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Reach"))));
-            categoryColors.put("Elytra Flight", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Elytra Flight"))));
-            categoryColors.put("Illegal Packets", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Illegal Packets"))));
-        } catch (Exception ignored) {
-            ThemisToDiscord.log(LogLevel.WARN, "Invalid colors in the config file. Using default values.");
-            categoryColors.clear();
-            categoryColors.put("Boat Movement", Color.decode("#875229"));
-            categoryColors.put("Flight / Y-Movement", Color.decode("#3276bf"));
-            categoryColors.put("Speed", Color.decode("#d6e600"));
-            categoryColors.put("Spoofed Packets", Color.decode("#ff0000"));
-            categoryColors.put("Timer / Blink", Color.decode("#d61ad6"));
-            categoryColors.put("Reach", Color.decode("#6f1ad6"));
-            categoryColors.put("Elytra Flight", Color.decode("#afaeb0"));
-            categoryColors.put("Illegal Packets", Color.decode("#141414"));
+            config.save();
+        } catch (IOException e) {
+            ThemisToDiscord.log(LogLevel.ERROR, "Failed to save plugin config! Additional info: \n" + e);
         }
     }
+
+    public void reload() {
+        try {
+            config.reload();
+            if (ThemisToDiscord.isInvalidWebhookUrl(config.getString("webhookUrl"))) {
+                ThemisToDiscord.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
+            }
+        } catch (IOException e) {
+            ThemisToDiscord.log(LogLevel.ERROR, "Failed to reload plugin config! Additional info: \n" + e);
+        }
+    }
+
 }

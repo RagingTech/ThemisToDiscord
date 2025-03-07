@@ -3,6 +3,7 @@ package xyz.earthcow.themistodiscord;
 import com.gmail.olexorus.themis.api.CheckType;
 import com.gmail.olexorus.themis.api.ThemisApi;
 import com.gmail.olexorus.themis.api.ViolationEvent;
+import dev.dejvokep.boostedyaml.YamlDocument;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +22,7 @@ public class ThemisListener implements Listener {
 
     @EventHandler
     public void onViolationEvent(ViolationEvent event) {
-        Configuration config = ThemisToDiscord.config;
+        YamlDocument config = ThemisToDiscord.config.get();
         Player player = event.getPlayer();
         UUID playerUUID = player.getUniqueId();
 
@@ -32,14 +33,14 @@ public class ThemisListener implements Listener {
 
         double score = Math.round(ThemisApi.getViolationScore(player, checkType) * 100.0) / 100.0;
 
-        if (config.executionThreshold > score
-                || config.repetitionDelay > ((System.currentTimeMillis() - lastSentTimesForPlayer.getOrDefault(checkType, 0L)) / 1000.0)) return;
+        if (config.getDouble("execution-threshold") > score
+                || config.getDouble("repetition-delay") > ((System.currentTimeMillis() - lastSentTimesForPlayer.getOrDefault(checkType, 0L)) / 1000.0)) return;
 
         int repetitionCounterForCheckType = repetitionCountersForPlayer.getOrDefault(checkType, -2) + 1;
         repetitionCountersForPlayer.put(checkType, repetitionCounterForCheckType);
         repetitionCountersPerPlayer.put(playerUUID, repetitionCountersForPlayer);
 
-        if (repetitionCounterForCheckType == config.repetitionThreshold) {
+        if (repetitionCounterForCheckType == config.getDouble("repetition-threshold")) {
             repetitionCountersForPlayer.put(checkType, -1);
             repetitionCountersPerPlayer.put(playerUUID, repetitionCountersForPlayer);
         }
@@ -62,8 +63,17 @@ public class ThemisListener implements Listener {
 
         DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
 
+        Color color;
+
+        try {
+            color = Color.decode(config.getString("categoryColors." + checkTypeStr));
+        } catch (NumberFormatException e) {
+            color = Color.decode(config.getDefaults().getString("categoryColors." + checkTypeStr));
+            ThemisToDiscord.log(LogLevel.WARN, "Invalid color for " + checkTypeStr + "! Using default color.");
+        }
+
         embed
-                .setColor(config.categoryColors.getOrDefault(checkTypeStr, Color.GRAY))
+                .setColor(color)
                 .setTitle(checkTypeStr)
                 .setDescription("Themis flagged " + player.getName() + " for " + checkTypeStr + " hacks!")
                 .setAuthor(player.getName(), null, null)
