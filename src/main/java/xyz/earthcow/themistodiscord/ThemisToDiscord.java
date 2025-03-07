@@ -2,6 +2,7 @@ package xyz.earthcow.themistodiscord;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +32,24 @@ public final class ThemisToDiscord extends JavaPlugin {
     @Override
     public void onDisable() {}
 
+    public static void log(String message) {
+        instance.getLogger().info(message);
+    }
+
+    public static void log(LogLevel logLevel, String message) {
+        switch (logLevel) {
+            case WARN:
+                instance.getLogger().warning(message);
+                break;
+            case ERROR:
+                instance.getLogger().severe(message);
+                break;
+            default:
+                log(message);
+                break;
+        }
+    }
+
     public static boolean isInvalidWebhookUrl(@Nullable String url) {
         if (url == null) return true;
         return !DiscordWebhook.WEBHOOK_PATTERN.matcher(url).matches();
@@ -38,10 +57,10 @@ public final class ThemisToDiscord extends JavaPlugin {
 
     public static void executeWebhook(@NotNull DiscordWebhook.EmbedObject embed, @Nullable CommandSender sender) {
         if (isInvalidWebhookUrl(config.webhookUrl)) {
-            if (sender != null) {
-                sender.sendMessage(ChatColor.RED + "There is a problem with your configuration! Verify the webhook url and all config values.");
+            if (sender != null && !(sender instanceof ConsoleCommandSender)) {
+                sender.sendMessage(ChatColor.RED + "Webhook url is missing or invalid! Set one using /ttd url <url>");
             }
-            instance.getLogger().warning("There is a problem with your configuration! Verify the webhook url and all config values.");
+            log(LogLevel.ERROR, "Webhook url is missing or invalid! Set one using /ttd url <url>");
             return;
         }
 
@@ -59,7 +78,7 @@ public final class ThemisToDiscord extends JavaPlugin {
                 if (sender != null) {
                     sender.sendMessage(ChatColor.RED + "There is a problem with your configuration! Verify the webhook url and all config values.");
                 }
-                instance.getLogger().warning("There is a problem with your configuration! Verify the webhook url and all config values.");
+                log(LogLevel.ERROR, "There is a problem with your configuration! Verify the webhook url and all config values.");
             }
         });
     }

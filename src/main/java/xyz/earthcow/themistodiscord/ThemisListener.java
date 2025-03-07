@@ -53,7 +53,7 @@ public class ThemisListener implements Listener {
                 ping = "" + Objects.requireNonNullElse(ThemisApi.getPing(player), 0);
                 tps = "" + ThemisApi.getTps();
             } catch (NoSuchMethodError err) {
-                ThemisToDiscord.instance.getLogger().warning("Please update Themis to 0.15.3 or higher for player ping and server tps!");
+                ThemisToDiscord.log(LogLevel.WARN, "Please update Themis to 0.15.3 or higher for player ping and server tps!");
                 pingSupportedVersion = false;
             }
         }

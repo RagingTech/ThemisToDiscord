@@ -42,7 +42,7 @@ public class Configuration {
         webhookUrl = fileConfig.getString("webhookUrl");
 
         if (ThemisToDiscord.isInvalidWebhookUrl(webhookUrl)) {
-            ThemisToDiscord.instance.getLogger().warning("Webhook url is missing or invalid! Set one using /ttd url <url>");
+            ThemisToDiscord.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
         }
 
         executionThreshold = fileConfig.getDouble("execution-threshold");
@@ -60,7 +60,7 @@ public class Configuration {
             categoryColors.put("Elytra Flight", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Elytra Flight"))));
             categoryColors.put("Illegal Packets", Color.decode(Objects.requireNonNull(fileConfig.getString("categoryColors.Illegal Packets"))));
         } catch (Exception ignored) {
-            ThemisToDiscord.instance.getLogger().warning("Invalid colors in the config file. Using default values.");
+            ThemisToDiscord.log(LogLevel.WARN, "Invalid colors in the config file. Using default values.");
             categoryColors.clear();
             categoryColors.put("Boat Movement", Color.decode("#875229"));
             categoryColors.put("Flight / Y-Movement", Color.decode("#3276bf"));
