@@ -200,7 +200,7 @@ public class Message {
                     player, detectionType, score, ping, tps
                 ),
                 Utils.handleAllPlaceholders(
-                    embedSection.getString("Footer.Icon", null),
+                    embedSection.getString("Footer.IconUrl", null),
                     player, detectionType, score, ping, tps
                 )
             );
