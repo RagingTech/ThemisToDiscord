@@ -71,10 +71,14 @@ public class Message {
         // Set the custom webhook parameters
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
             webhook.setUsername(
-                Utils.handlePlayerPlaceholders(message.getString("CustomWebhook.Name"), player)
+                Utils.handleAllPlaceholders(
+                    message.getString("CustomWebhook.Name"),
+                    player, detectionType, score, ping, tps)
             );
             webhook.setAvatarUrl(
-                Utils.handlePlayerPlaceholders(message.getString("CustomWebhook.AvatarUrl"), player)
+                Utils.handleAllPlaceholders(
+                    message.getString("CustomWebhook.AvatarUrl"),
+                    player, detectionType, score, ping, tps)
             );
         }
 
@@ -228,6 +232,7 @@ public class Message {
                 }
                 ThemisToDiscord.log(LogLevel.ERROR, "There is a problem with your configuration! Verify the webhook url and all config values for message: " + name);
                 ThemisToDiscord.log(LogLevel.DEBUG, "Exception: " + e);
+                ThemisToDiscord.log(LogLevel.DEBUG, "Webhook: " + webhook.getJsonString());
             }
         });
     }
