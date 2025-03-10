@@ -7,12 +7,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.earthcow.discordwebhook.DiscordWebhook;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TtdCommand implements CommandExecutor, TabCompleter {
     @Override
@@ -34,16 +33,9 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 ThemisToDiscord.config.save();
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
                 break;
-            case "test":
-                DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
-                embed
-                        .setColor(Color.GREEN)
-                        .setAuthor(sender.getName(), null, null)
-                        .setTitle("ThemisToDiscord Test")
-                        .setDescription("Testing the ThemisToDiscord webhook functionality");
+            case "msg":
+                // TODO: Implement /ttd msg
 
-                sender.sendMessage(ChatColor.AQUA + "Sending test message...");
-                ThemisToDiscord.executeWebhook(embed, sender);
                 break;
             case "reload":
                 ThemisToDiscord.config.reload();
@@ -59,7 +51,15 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("url", "test", "reload");
+            return Arrays.asList("url", "msg", "reload");
+        } else if (args.length >= 2 && args[0].equals("msg")) {
+            if (args.length == 2) {
+                return ThemisToDiscord.config.getMessages().stream().map(Message::getName).collect(Collectors.toList());
+            } else if (args.length <= 4) {
+                return Arrays.asList("player:", "type:");
+            } else {
+                return Arrays.asList("score:", "ping:", "tps:");
+            }
         }
         return new ArrayList<>();
     }

@@ -3,88 +3,56 @@ package xyz.earthcow.themistodiscord;
 import com.gmail.olexorus.themis.api.CheckType;
 import com.gmail.olexorus.themis.api.ThemisApi;
 import com.gmail.olexorus.themis.api.ViolationEvent;
-import dev.dejvokep.boostedyaml.YamlDocument;
+import dev.dejvokep.boostedyaml.block.implementation.Section;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import xyz.earthcow.discordwebhook.DiscordWebhook;
-
-import java.awt.*;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.UUID;
 
 public class ThemisListener implements Listener {
-    private final HashMap<UUID, HashMap<CheckType, Long>> lastSentTimesPerPlayer = new HashMap<>();
-    private final HashMap<UUID, HashMap<CheckType, Integer>> repetitionCountersPerPlayer = new HashMap<>();
     private boolean pingSupportedVersion = true;
 
     @EventHandler
     public void onViolationEvent(ViolationEvent event) {
-        YamlDocument config = ThemisToDiscord.config.get();
         Player player = event.getPlayer();
-        UUID playerUUID = player.getUniqueId();
-
-        HashMap<CheckType, Long> lastSentTimesForPlayer = lastSentTimesPerPlayer.getOrDefault(playerUUID, new HashMap<>());
-        HashMap<CheckType, Integer> repetitionCountersForPlayer = repetitionCountersPerPlayer.getOrDefault(playerUUID, new HashMap<>());
-
         CheckType checkType = event.getType();
 
-        double score = Math.round(ThemisApi.getViolationScore(player, checkType) * 100.0) / 100.0;
-
-        if (config.getDouble("execution-threshold") > score
-                || config.getDouble("repetition-delay") > ((System.currentTimeMillis() - lastSentTimesForPlayer.getOrDefault(checkType, 0L)) / 1000.0)) return;
-
-        int repetitionCounterForCheckType = repetitionCountersForPlayer.getOrDefault(checkType, -2) + 1;
-        repetitionCountersForPlayer.put(checkType, repetitionCounterForCheckType);
-        repetitionCountersPerPlayer.put(playerUUID, repetitionCountersForPlayer);
-
-        if (repetitionCounterForCheckType == config.getDouble("repetition-threshold")) {
-            repetitionCountersForPlayer.put(checkType, -1);
-            repetitionCountersPerPlayer.put(playerUUID, repetitionCountersForPlayer);
-        }
-
-        if (repetitionCountersForPlayer.get(checkType) != -1) return;
-
-        String ping = "NA";
-        String tps = "NA";
+        double ping = 0, tps = 0;
         if (pingSupportedVersion) {
             try {
-                ping = "" + Objects.requireNonNullElse(ThemisApi.getPing(player), 0);
-                tps = "" + ThemisApi.getTps();
-            } catch (NoSuchMethodError err) {
+                ping = (ThemisApi.getPing(player) != null) ? ThemisApi.getPing(player) : 0;
+                tps = ThemisApi.getTps();
+            } catch (NoSuchMethodError e) {
                 ThemisToDiscord.log(LogLevel.WARN, "Please update Themis to 0.15.3 or higher for player ping and server tps!");
                 pingSupportedVersion = false;
             }
         }
 
-        String checkTypeStr = checkType.getDescription();
+        double score = Math.round(ThemisApi.getViolationScore(player, checkType) * 100.0) / 100.0;
 
-        DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
+        for (Message message : ThemisToDiscord.config.getMessages()) {
+            Section handling = message.getHandling();
 
-        Color color;
+            if (handling == null || !handling.getBoolean("Enabled", false)) {
+                continue;
+            }
 
-        try {
-            color = Color.decode(config.getString("categoryColors." + checkTypeStr));
-        } catch (NumberFormatException e) {
-            color = Color.decode(config.getDefaults().getString("categoryColors." + checkTypeStr));
-            ThemisToDiscord.log(LogLevel.WARN, "Invalid color for " + checkTypeStr + "! Using default color.");
+            if (handling.getDouble("execution-threshold") > score
+                || handling.getDouble("repetition-delay") > ((System.currentTimeMillis() - message.getLastSentTimeForPlayer(player, checkType)) / 1000.0))
+                continue;
+
+            int repetitionCounterForCheckType = message.getRepetitionCountForPlayer(player, checkType) + 1;
+
+            if (repetitionCounterForCheckType == handling.getDouble("repetition-threshold")) {
+                message.putRepetitionCountForPlayer(player, checkType, -1);
+                repetitionCounterForCheckType = -1;
+            } else {
+                message.putRepetitionCountForPlayer(player, checkType, repetitionCounterForCheckType);
+            }
+
+            if (repetitionCounterForCheckType != -1) continue;
+
+            message.execute(player, checkType.getDescription(), score, ping, tps, null);
+            message.updateLastSentTimeForPlayer(player, checkType);
         }
-
-        embed
-                .setColor(color)
-                .setTitle(checkTypeStr)
-                .setDescription("Themis flagged " + player.getName() + " for " + checkTypeStr + " hacks!")
-                .setAuthor(player.getName(), null, null)
-                .addField("Score", "" + score, true)
-                .addField("Ping", ping, true)
-                .addField("TPS", tps, true)
-                .setTimestamp((new Date()).toInstant());
-
-        ThemisToDiscord.executeWebhook(embed, null);
-
-        lastSentTimesForPlayer.put(checkType, System.currentTimeMillis());
-        lastSentTimesPerPlayer.put(playerUUID, lastSentTimesForPlayer);
     }
 }

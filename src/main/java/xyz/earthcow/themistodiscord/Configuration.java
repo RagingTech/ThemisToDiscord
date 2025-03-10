@@ -10,13 +10,16 @@ import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Configuration {
-    private final ThemisToDiscord plugin;
     private YamlDocument config;
 
+    private Set<Message> messages;
+
     public Configuration() {
-        this.plugin = ThemisToDiscord.instance;
+        ThemisToDiscord plugin = ThemisToDiscord.instance;
 
         try {
             config = YamlDocument.create(
@@ -31,6 +34,7 @@ public class Configuration {
 
             config.update();
             config.save();
+            load();
         } catch (IOException e){
             ThemisToDiscord.log(LogLevel.ERROR, "Could not create/load plugin config, disabling! Additional info: \n" + e);
             plugin.getPluginLoader().disablePlugin(plugin);
@@ -42,8 +46,16 @@ public class Configuration {
         }
     }
 
+    private void load() {
+        messages = config.getSection("Messages").getRoutesAsStrings(false).stream().map(route -> new Message(config.getSection("Messages").getSection(route))).collect(Collectors.toSet());
+    }
+
     public YamlDocument get() {
         return config;
+    }
+
+    public Set<Message> getMessages() {
+        return messages;
     }
 
     public void save() {
@@ -57,6 +69,7 @@ public class Configuration {
     public void reload() {
         try {
             config.reload();
+            load();
             if (ThemisToDiscord.isInvalidWebhookUrl(config.getString("webhookUrl"))) {
                 ThemisToDiscord.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
             }
