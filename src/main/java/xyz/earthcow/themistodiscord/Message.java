@@ -71,7 +71,7 @@ public class Message {
         // Set the custom webhook parameters
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
             webhook.setUsername(
-                Utils.handlePlayerPlaceholders(message.getString("CustomWebhook.Username"), player)
+                Utils.handlePlayerPlaceholders(message.getString("CustomWebhook.Name"), player)
             );
             webhook.setAvatarUrl(
                 Utils.handlePlayerPlaceholders(message.getString("CustomWebhook.AvatarUrl"), player)
