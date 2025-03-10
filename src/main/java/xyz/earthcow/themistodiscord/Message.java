@@ -81,7 +81,7 @@ public class Message {
         // Set the message content
         webhook.setContent(
             Utils.handleAllPlaceholders(
-                message.getString("CustomWebhook.Content"),
+                message.getString("Content"),
                 player, detectionType, score, ping, tps
             )
         );
