@@ -21,7 +21,7 @@ categoryColors:
 
 # The url to an image that will replace %avatar_url% throughout this config
 # Available placeholders are %player_uuid% & %player_name%
-AvatarUrl: "https://mc-heads.net/avatar/%player_uuid%"
+AvatarUrl: "https://minotar.net/avatar/%player_uuid%"
 
 # The messages that will be sent to Discord
 Messages:
