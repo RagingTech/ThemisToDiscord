@@ -1,5 +1,7 @@
 package xyz.earthcow.themistodiscord;
 
+import com.gmail.olexorus.themis.api.CheckType;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -8,12 +10,11 @@ import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TtdCommand implements CommandExecutor, TabCompleter {
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
         if (args.length < 1) return false;
@@ -34,8 +35,34 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
                 break;
             case "msg":
-                // TODO: Implement /ttd msg
+                if (args.length < 3) {
+                    sender.sendMessage(ChatColor.RED + "/ttd msg <message> <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps]");
+                    return true;
+                }
+                String message = args[1];
 
+                // Rebuild full command to properly extract everything
+                String fullCommand = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+                Map<String, String> parsedArgs = parseArguments(fullCommand);
+
+                String playerName = parsedArgs.get("player");
+                String type = parsedArgs.get("type");
+                double score = parseDouble(parsedArgs.get("score"));
+                double ping = parseDouble(parsedArgs.get("ping"));
+                double tps = parseDouble(parsedArgs.get("tps"));
+
+                if (playerName == null || type == null) {
+                    sender.sendMessage(ChatColor.RED + "/ttd msg <message> <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps]");
+                    return true;
+                }
+
+                sender.sendMessage(ChatColor.GREEN + "Message command processed:");
+                sender.sendMessage(ChatColor.YELLOW + "Message: " + message);
+                sender.sendMessage(ChatColor.YELLOW + "Player: " + playerName);
+                sender.sendMessage(ChatColor.YELLOW + "Type: " + type);
+                sender.sendMessage(ChatColor.YELLOW + "Score: " + score);
+                sender.sendMessage(ChatColor.YELLOW + "Ping: " + ping);
+                sender.sendMessage(ChatColor.YELLOW + "TPS: " + tps);
                 break;
             case "reload":
                 ThemisToDiscord.config.reload();
@@ -47,20 +74,85 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    @Nullable
-    @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
-        if (args.length == 1) {
-            return Arrays.asList("url", "msg", "reload");
-        } else if (args.length >= 2 && args[0].equals("msg")) {
-            if (args.length == 2) {
-                return ThemisToDiscord.config.getMessages().stream().map(Message::getName).collect(Collectors.toList());
-            } else if (args.length <= 4) {
-                return Arrays.asList("player:", "type:");
-            } else {
-                return Arrays.asList("score:", "ping:", "tps:");
+    private Map<String, String> parseArguments(String input) {
+        Map<String, String> result = new HashMap<>();
+        String[] parts = input.split(" ");
+        String key = null;
+        StringBuilder value = new StringBuilder();
+
+        for (String part : parts) {
+            if (part.contains(":")) {
+                // If we already have a key-value pair, store it
+                if (key != null) {
+                    result.put(key, value.toString().trim());
+                }
+
+                // Extract the key and start a new value
+                String[] keyValue = part.split(":", 2);
+                key = keyValue[0].toLowerCase();
+                value = new StringBuilder(keyValue.length > 1 ? keyValue[1] : "");
+            } else if (key != null) {
+                // Append additional words to the value
+                value.append(" ").append(part);
             }
         }
-        return new ArrayList<>();
+
+        // Store the last key-value pair
+        if (key != null) {
+            result.put(key, value.toString().trim());
+        }
+
+        return result;
+    }
+
+    private double parseDouble(String value) {
+        try {
+            return value != null ? Double.parseDouble(value) : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    @Nullable
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (args.length == 1) {
+            return Arrays.asList("url", "msg", "reload");
+        }
+
+        if (args[0].equalsIgnoreCase("msg")) {
+            if (args.length == 2) {
+                return ThemisToDiscord.config.getMessages().stream().map(Message::getName).collect(Collectors.toList());
+            }
+
+            List<String> completions = new ArrayList<>();
+            boolean hasPlayer = false, hasType = false, hasScore = false, hasPing = false, hasTps = false;
+
+            for (String arg : args) {
+                if (arg.startsWith("player:")) hasPlayer = true;
+                if (arg.startsWith("type:")) hasType = true;
+                if (arg.startsWith("score:")) hasScore = true;
+                if (arg.startsWith("ping:")) hasPing = true;
+                if (arg.startsWith("tps:")) hasTps = true;
+            }
+
+            if (!hasPlayer) {
+                completions.addAll(Bukkit.getOnlinePlayers().stream()
+                    .map(player -> "player:" + player.getName())
+                    .collect(Collectors.toList()));
+            } else if (!hasType) {
+                completions.addAll(Arrays.stream(CheckType.values()).map(checkType -> "type:" + checkType.getDescription()).collect(Collectors.toList()));
+            } else {
+                if (!hasScore) completions.add("score:");
+                if (!hasPing) completions.add("ping:");
+                if (!hasTps) completions.add("tps:");
+            }
+
+            return completions.stream()
+                .filter(c -> c.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
+                .collect(Collectors.toList());
+        }
+
+        return Collections.emptyList();
     }
 }
