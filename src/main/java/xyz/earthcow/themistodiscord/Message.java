@@ -224,7 +224,7 @@ public class Message {
             try {
                 webhook.execute();
                 if (sender != null) {
-                    sender.sendMessage(ChatColor.GREEN + "Message, " + name + ", was sent!");
+                    sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }
             } catch (IOException e) {
                 if (sender != null) {

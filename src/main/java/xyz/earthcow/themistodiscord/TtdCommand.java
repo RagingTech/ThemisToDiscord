@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,7 +40,12 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.RED + "/ttd msg <message> <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps]");
                     return true;
                 }
-                String message = args[1];
+
+                Message message = ThemisToDiscord.config.getMessages().stream().filter(msg -> msg.getName().equals(args[1])).findFirst().orElse(null);
+                if (message == null) {
+                    sender.sendMessage(ChatColor.RED + "The message: " + args[1] + " does not exist!");
+                    return true;
+                }
 
                 // Rebuild full command to properly extract everything
                 String fullCommand = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
@@ -56,13 +62,18 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                sender.sendMessage(ChatColor.GREEN + "Message command processed:");
-                sender.sendMessage(ChatColor.YELLOW + "Message: " + message);
-                sender.sendMessage(ChatColor.YELLOW + "Player: " + playerName);
-                sender.sendMessage(ChatColor.YELLOW + "Type: " + type);
-                sender.sendMessage(ChatColor.YELLOW + "Score: " + score);
-                sender.sendMessage(ChatColor.YELLOW + "Ping: " + ping);
-                sender.sendMessage(ChatColor.YELLOW + "TPS: " + tps);
+                Player player = Bukkit.getPlayer(playerName);
+                if (player == null || !player.isOnline()) {
+                    sender.sendMessage(ChatColor.RED + "The player: " + playerName + " is not online or does not exist!");
+                    return true;
+                }
+
+                if (Arrays.stream(CheckType.values()).map(CheckType::getDescription).noneMatch(desc -> desc.equals(type))) {
+                    sender.sendMessage(ChatColor.RED + "The detection type: " + type + " does not exist!");
+                    return true;
+                }
+
+                message.execute(player, type, score, ping, tps, (sender instanceof Player) ? sender : null);
                 break;
             case "reload":
                 ThemisToDiscord.config.reload();
