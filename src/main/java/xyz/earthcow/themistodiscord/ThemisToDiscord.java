@@ -1,6 +1,7 @@
 package xyz.earthcow.themistodiscord;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.floodgate.api.FloodgateApi;
 import org.jetbrains.annotations.Nullable;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
@@ -9,6 +10,7 @@ import java.util.Objects;
 public final class ThemisToDiscord extends JavaPlugin {
     public static ThemisToDiscord instance;
     public static Configuration config;
+    public static FloodgateApi floodgateApi;
 
     @Override
     public void onEnable() {
@@ -22,6 +24,12 @@ public final class ThemisToDiscord extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new ThemisListener(), this);
 
+        if (getServer().getPluginManager().isPluginEnabled("Floodgate")) {
+            log("Found Floodgate! Enabling features...");
+            floodgateApi = FloodgateApi.getInstance();
+        } else {
+            log(LogLevel.WARN, "Floodgate not found! Some features may be disabled.");
+        }
     }
 
     @Override

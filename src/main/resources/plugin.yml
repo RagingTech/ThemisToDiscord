@@ -4,6 +4,8 @@ main: xyz.earthcow.themistodiscord.ThemisToDiscord
 api-version: '1.17'
 depend:
   - Themis
+softdepend:
+  - Floodgate
 
 commands:
   ttd:
