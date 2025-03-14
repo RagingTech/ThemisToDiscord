@@ -45,6 +45,7 @@ public final class ThemisToDiscord extends JavaPlugin {
                 if (config.get().getBoolean("debug")) {
                     instance.getLogger().warning("[DEBUG] " + message);
                 }
+                break;
             case WARN:
                 instance.getLogger().warning(message);
                 break;
