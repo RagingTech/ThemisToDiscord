@@ -7,7 +7,7 @@ depend:
 
 commands:
   ttd:
-    usage: §c/<command> <url | msg | reload> [ <url> ] [ <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps] ]
+    usage: §c/<command> <url | msg | reload> [ <url> ] [ <message> <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps] ]
     permission: themistodiscord.ttd
 
 permissions:
