@@ -25,6 +25,16 @@ AvatarUrl: "https://minotar.net/avatar/%player_uuid%"
 
 # The messages that will be sent to Discord
 Messages:
+  # Available placeholders:
+  # %player_name%    - Player username
+  # %player_uuid%    - Player uuid
+  # %detection_type% - Type of hack detected (matches one of the category colors)
+  # %score%          - Player score
+  # %ping%           - Player ping
+  # %tps%            - Server tps
+  # %avatar_url%     - Player avatar url defined above
+  # %os%             - Detected player operating system
+
   # Either invoke via command in a Themis action or by defining the thresholds and delay here
   # Example command: /ttd msg default <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps]
   default:
