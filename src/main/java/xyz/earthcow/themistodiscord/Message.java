@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 import java.awt.*;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -219,18 +220,53 @@ public class Message {
     }
 
     public void execute(@NotNull Player player, @NotNull String detectionType, double score, double ping, double tps, @Nullable CommandSender sender) {
-        handleMessageContent(player, detectionType, score, ping, tps);
         ThemisToDiscord.instance.getServer().getScheduler().runTaskAsynchronously(ThemisToDiscord.instance, () -> {
+            handleMessageContent(player, detectionType, score, ping, tps);
             try {
                 webhook.execute();
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }
             } catch (IOException e) {
-                if (sender != null) {
-                    sender.sendMessage(ChatColor.RED + "There is a problem with your configuration! Verify the webhook url and all config values for message: " + name);
+                String msg;
+                if (e instanceof FileNotFoundException) {
+                    msg = "Your webhook url is not valid! Update it with /ttd url <url>!";
+                } else {
+                    String message = e.getMessage();
+                    if (message != null && message.contains("HTTP response code:")) {
+                        int responseCode = Integer.parseInt(message.substring(message.indexOf(":") + 2, message.indexOf(":") + 5));
+                        switch (responseCode) {
+                            case 400:
+                                msg = "Error - 400 response - bad request. Verify all urls are either blank or valid urls.";
+                                break;
+                            case 401:
+                                msg = "Error - 401 response - unauthorized. Verify webhook url and discord server status.";
+                                break;
+                            case 403:
+                                msg = "Error - 403 response - forbidden. Verify webhook url and discord server status.";
+                                break;
+                            case 404:
+                                msg = "Error - 404 response - not found. Verify webhook url and discord server status.";
+                                break;
+                            case 429:
+                                msg = "Error - 429 response - too many requests. This webhook has sent too many messages in too short amount of time.";
+                                break;
+                            case 500:
+                                msg = "Error - 505 response - internal server error. Discord services may be temporarily down.";
+                                break;
+                            default:
+                                msg = "Error - " + responseCode + " response - unexpected error code.";
+                                break;
+                        }
+                    } else {
+                        msg = "Unknown error has occurred. Please make a bug report at https://github.com/RagingTech/ThemisToDiscord/issues.";
+                    }
                 }
-                ThemisToDiscord.log(LogLevel.ERROR, "There is a problem with your configuration! Verify the webhook url and all config values for message: " + name);
+                msg = msg + " For message: " + name;
+                if (sender != null) {
+                    sender.sendMessage(ChatColor.RED + msg);
+                }
+                ThemisToDiscord.log(LogLevel.ERROR, msg);
                 ThemisToDiscord.log(LogLevel.DEBUG, "Exception: " + e);
                 ThemisToDiscord.log(LogLevel.DEBUG, "Webhook: " + webhook.getJsonString());
             }
