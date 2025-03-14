@@ -68,6 +68,9 @@ public class Configuration {
 
     public void reload() {
         try {
+            for (Message message : messages) {
+                message.forceExecutorShutdown();
+            }
             config.reload();
             load();
             if (ThemisToDiscord.isInvalidWebhookUrl(config.getString("webhookUrl"))) {

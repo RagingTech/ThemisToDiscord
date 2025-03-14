@@ -14,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Message {
     @NotNull
@@ -32,6 +34,8 @@ public class Message {
     // For use with handling
     private final HashMap<UUID, HashMap<CheckType, Long>> lastSentTimesPerPlayer = new HashMap<>();
     private final HashMap<UUID, HashMap<CheckType, Integer>> repetitionCountersPerPlayer = new HashMap<>();
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public Message(@NotNull Section message) {
         this.message = message;
@@ -220,7 +224,8 @@ public class Message {
     }
 
     public void execute(@NotNull Player player, @NotNull String detectionType, double score, double ping, double tps, @Nullable CommandSender sender) {
-        ThemisToDiscord.instance.getServer().getScheduler().runTaskAsynchronously(ThemisToDiscord.instance, () -> {
+        // Using a single thread executor ensures messages are not concurrently modified and sent in succession
+        executor.submit(() -> {
             handleMessageContent(player, detectionType, score, ping, tps);
             try {
                 webhook.execute();
@@ -228,39 +233,44 @@ public class Message {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }
             } catch (IOException e) {
-                String msg;
+                String msg = null;
                 if (e instanceof FileNotFoundException) {
                     msg = "Your webhook url is not valid! Update it with /ttd url <url>!";
                 } else {
                     String message = e.getMessage();
                     if (message != null && message.contains("HTTP response code:")) {
-                        int responseCode = Integer.parseInt(message.substring(message.indexOf(":") + 2, message.indexOf(":") + 5));
-                        switch (responseCode) {
-                            case 400:
-                                msg = "Error - 400 response - bad request. Verify all urls are either blank or valid urls.";
-                                break;
-                            case 401:
-                                msg = "Error - 401 response - unauthorized. Verify webhook url and discord server status.";
-                                break;
-                            case 403:
-                                msg = "Error - 403 response - forbidden. Verify webhook url and discord server status.";
-                                break;
-                            case 404:
-                                msg = "Error - 404 response - not found. Verify webhook url and discord server status.";
-                                break;
-                            case 429:
-                                msg = "Error - 429 response - too many requests. This webhook has sent too many messages in too short amount of time.";
-                                break;
-                            case 500:
-                                msg = "Error - 505 response - internal server error. Discord services may be temporarily down.";
-                                break;
-                            default:
-                                msg = "Error - " + responseCode + " response - unexpected error code.";
-                                break;
+                        try {
+                            int responseCode = Integer.parseInt(message.substring(message.indexOf(":") + 2, message.indexOf(":") + 5));
+                            switch (responseCode) {
+                                case 400:
+                                    msg = "Error - 400 response - bad request. Verify all urls are either blank or valid urls.";
+                                    break;
+                                case 401:
+                                    msg = "Error - 401 response - unauthorized. Verify webhook url and discord server status.";
+                                    break;
+                                case 403:
+                                    msg = "Error - 403 response - forbidden. Verify webhook url and discord server status.";
+                                    break;
+                                case 404:
+                                    msg = "Error - 404 response - not found. Verify webhook url and discord server status.";
+                                    break;
+                                case 429:
+                                    msg = "Error - 429 response - too many requests. This webhook has sent too many messages in too short amount of time.";
+                                    break;
+                                case 500:
+                                    msg = "Error - 505 response - internal server error. Discord services may be temporarily down.";
+                                    break;
+                                default:
+                                    msg = "Error - " + responseCode + " response - unexpected error code.";
+                                    break;
+                            }
+                        } catch (IndexOutOfBoundsException | NumberFormatException ex) {
+                            ThemisToDiscord.log(LogLevel.DEBUG, "Secondary exception: " + ex);
                         }
-                    } else {
-                        msg = "Unknown error has occurred. Please make a bug report at https://github.com/RagingTech/ThemisToDiscord/issues.";
                     }
+                }
+                if (msg == null) {
+                    msg = "Unknown error has occurred. Please make a bug report at https://github.com/RagingTech/ThemisToDiscord/issues.";
                 }
                 msg = msg + " For message: " + name;
                 if (sender != null) {
@@ -279,6 +289,14 @@ public class Message {
 
     public @Nullable Section getHandling() {
         return handling;
+    }
+
+    public void forceExecutorShutdown() {
+        // Should only be performed upon reload
+        int unsentMessages = executor.shutdownNow().size();
+        if (unsentMessages > 0) {
+            ThemisToDiscord.log(LogLevel.WARN, unsentMessages + " messages were cancelled. For message: " + name);
+        }
     }
 
     public long getLastSentTimeForPlayer(Player player, CheckType checkType) {
