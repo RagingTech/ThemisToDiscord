@@ -226,9 +226,14 @@ public class Message {
     public void execute(@NotNull Player player, @NotNull String detectionType, double score, double ping, double tps, @Nullable CommandSender sender) {
         // Using a single thread executor ensures messages are not concurrently modified and sent in succession
         executor.submit(() -> {
-            handleMessageContent(player, detectionType, score, ping, tps);
             try {
-                webhook.execute();
+                String jsonString = message.getString("Json", "");
+                if (jsonString.isEmpty() || jsonString.equals("{}")) {
+                    handleMessageContent(player, detectionType, score, ping, tps);
+                    webhook.execute();
+                } else {
+                    webhook.execute(jsonString);
+                }
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }

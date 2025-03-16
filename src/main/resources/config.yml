@@ -55,15 +55,15 @@ Messages:
       Url: ""
       Name: ""
       AvatarUrl: ""
+    # Defines the json data used to construct the message
+    # This is useful if you want to design your message/embed with https://discohook.org/
+    # All other options are ignored if json is provided
+    Json: "{}"
     # The message content
     Content: ""
     Embed:
       # Enables the embed part of this message
       Enabled: true
-      # Defines the json data used to construct the embed
-      # This is useful if you want to design your embed with https://discohook.org/
-      # All other options are ignored if json is provided
-      Json: {}
       # The color shown on the side of the embed
       # Use %category_color% for colors defined above
       Color: "%category_color%"
