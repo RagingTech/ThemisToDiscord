@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.helpers.Util;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 import java.awt.*;
@@ -232,7 +233,7 @@ public class Message {
                     handleMessageContent(player, detectionType, score, ping, tps);
                     webhook.execute();
                 } else {
-                    webhook.execute(jsonString);
+                    webhook.execute(Utils.handleAllPlaceholders(jsonString, player, detectionType, score, ping, tps));
                 }
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
