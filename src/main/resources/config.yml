@@ -76,7 +76,7 @@ Messages:
         Text: "%detection_type%"
         Url: ""
       Description: "Themis flagged %player_name% for %detection_type% hacks!"
-      # Format is "title;value;inline" (e.g. "Who joined?;%player_name%;true") or "blank" to add a blank field
+      # Format is "title;value;inline" (e.g. "Player;%player_name%;true") or "blank" to add a blank field
       Fields:
         - "Score;%score%;true"
         - "Ping;%ping%;true"
@@ -92,7 +92,7 @@ Messages:
       Enabled: true
       Name: "%player_name%"
       AvatarUrl: "%avatar_url%"
-    Content: "I just used %detection_type% hacks on the Minecraft server"
+    Content: "I just used **%detection_type%** hacks on the Minecraft server"
   # Create more messages the same way!
   # Define different handling values or use a different command in Themis actions
 
