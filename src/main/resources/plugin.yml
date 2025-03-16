@@ -4,10 +4,12 @@ main: xyz.earthcow.themistodiscord.ThemisToDiscord
 api-version: '1.17'
 depend:
   - Themis
+softdepend:
+  - Floodgate
 
 commands:
   ttd:
-    usage: §c/<command> <url | test | reload> [<url>]
+    usage: §c/<command> <url | msg | reload> [ <url> ] [ <message> <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps] ]
     permission: themistodiscord.ttd
 
 permissions:

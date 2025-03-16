@@ -8,13 +8,6 @@
 # Replace this with your webhook url
 webhookUrl: copy your webhook url here
 
-# What is the minimum score for a notification to be sent to the discord?
-execution-threshold: 10.0
-# What amount of new violations need to happen before another notification is sent?
-repetition-threshold: 5.0
-# What amount of time needs to pass before another notification is sent?
-repetition-delay: 10.0
-
 # Specify the embed color for each hack category
 categoryColors:
   Boat Movement: "#875229"
@@ -25,3 +18,83 @@ categoryColors:
   Reach: "#6f1ad6"
   Elytra Flight: "#afaeb0"
   Illegal Packets: "#141414"
+
+# The url to an image that will replace %avatar_url% throughout this config
+# Available placeholders are %player_uuid% & %player_name%
+AvatarUrl: "https://minotar.net/avatar/%player_uuid%"
+
+# The messages that will be sent to Discord
+Messages:
+  # Available placeholders:
+  # %player_name%    - Player username
+  # %player_uuid%    - Player uuid
+  # %detection_type% - Type of hack detected (matches one of the category colors)
+  # %score%          - Player score
+  # %ping%           - Player ping
+  # %tps%            - Server tps
+  # %avatar_url%     - Player avatar url defined above
+  # %os%             - Detected player operating system
+  #                    (requires Floodgate and will always return "Java" for java players)
+
+  # Either invoke via command in a Themis action or by defining the thresholds and delay here
+  # Example command: /ttd msg default <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps]
+  default:
+    # Define whether ThemisToDiscord should handle sending this message
+    # Disable handling if you add this message's command to your Themis action(s)
+    Handling:
+      Enabled: true
+      # What is the minimum score for a notification to be sent to the discord?
+      execution-threshold: 10.0
+      # What amount of new violations need to happen before another notification is sent?
+      repetition-threshold: 5.0
+      # What amount of time needs to pass before another notification is sent?
+      repetition-delay: 10.0
+    # Lets you define a different webhook url, a custom name, and/or a pfp url just for this message
+    CustomWebhook:
+      Enabled: false
+      Url: ""
+      Name: ""
+      AvatarUrl: ""
+    # Defines the json data used to construct the message
+    # This is useful if you want to design your message/embed with https://discohook.org/
+    # All other options are ignored if json is provided
+    Json: "{}"
+    # The message content
+    Content: ""
+    Embed:
+      # Enables the embed part of this message
+      Enabled: true
+      # The color shown on the side of the embed
+      # Use %category_color% for colors defined above
+      Color: "%category_color%"
+      Author:
+        ImageUrl: "%avatar_url%"
+        Name: "%player_name%"
+        Url: ""
+      ThumbnailUrl: ""
+      Title:
+        Text: "%detection_type%"
+        Url: ""
+      Description: "Themis flagged %player_name% for %detection_type% hacks!"
+      # Format is "title;value;inline" (e.g. "Player;%player_name%;true") or "blank" to add a blank field
+      Fields:
+        - "Score;%score%;true"
+        - "Ping;%ping%;true"
+        - "TPS;%tps%;true"
+      ImageUrl: ""
+      Footer:
+        Text: "Themis"
+        IconUrl: "https://www.spigotmc.org/data/resource_icons/90/90766.jpg?1617185906"
+      Timestamp: true
+  # Run with /ttd msg example <player:player_name> <type:detection_type> [score:score] [ping:ping] [tps:tps]
+  example:
+    CustomWebhook:
+      Enabled: true
+      Name: "%player_name%"
+      AvatarUrl: "%avatar_url%"
+    Content: "I just used **%detection_type%** hacks on the Minecraft server"
+  # Create more messages the same way!
+  # Define different handling values or use a different command in Themis actions
+
+debug: false
+config-version: 2
