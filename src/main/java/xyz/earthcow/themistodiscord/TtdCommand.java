@@ -33,6 +33,8 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 }
                 ThemisToDiscord.config.get().set("webhookUrl", webhookUrl);
                 ThemisToDiscord.config.save();
+                // Re-evaluate config messages for changes in webhook url
+                ThemisToDiscord.config.reload();
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
                 break;
             case "msg":
