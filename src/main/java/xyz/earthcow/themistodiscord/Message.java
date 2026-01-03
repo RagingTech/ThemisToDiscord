@@ -7,7 +7,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.helpers.Util;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 import java.awt.*;
