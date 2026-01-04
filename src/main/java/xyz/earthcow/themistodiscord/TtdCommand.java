@@ -15,9 +15,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class TtdCommand implements CommandExecutor, TabCompleter {
+    @NotNull
     private final Configuration config;
     
-    public TtdCommand(Configuration config) {
+    public TtdCommand(@NotNull Configuration config) {
         this.config = config;
     }
 

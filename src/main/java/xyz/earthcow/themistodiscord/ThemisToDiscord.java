@@ -2,6 +2,7 @@ package xyz.earthcow.themistodiscord;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public final class ThemisToDiscord extends JavaPlugin {
@@ -9,7 +10,13 @@ public final class ThemisToDiscord extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        this.config = new Configuration(this);
+        try {
+            this.config = new Configuration(this);
+        } catch (IOException e){
+            log(LogLevel.ERROR, "Could not create/load plugin config, disabling! Additional info: \n" + e);
+            getPluginLoader().disablePlugin(this);
+            return;
+        }
 
         TtdCommand ttdCommand = new TtdCommand(config);
         Objects.requireNonNull(getCommand("ttd")).setExecutor(ttdCommand);

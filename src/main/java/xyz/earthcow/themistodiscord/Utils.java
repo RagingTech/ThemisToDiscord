@@ -8,10 +8,12 @@ import org.jetbrains.annotations.Nullable;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 public class Utils {
+    @Nullable
     private FloodgateApi floodgateApi;
+    @NotNull
     private final YamlDocument config;
 
-    public Utils(ThemisToDiscord ttd, YamlDocument configDocument) {
+    public Utils(@NotNull ThemisToDiscord ttd, @NotNull YamlDocument configDocument) {
         if (ttd.getServer().getPluginManager().isPluginEnabled("Floodgate")) {
             ttd.log("Found Floodgate! Enabling features...");
             floodgateApi = FloodgateApi.getInstance();
