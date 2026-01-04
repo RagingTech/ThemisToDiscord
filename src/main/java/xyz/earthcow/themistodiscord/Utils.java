@@ -1,20 +1,35 @@
 package xyz.earthcow.themistodiscord;
 
+import dev.dejvokep.boostedyaml.YamlDocument;
 import org.bukkit.entity.Player;
+import org.geysermc.floodgate.api.FloodgateApi;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 public class Utils {
+    private FloodgateApi floodgateApi;
+    private final YamlDocument config;
+
+    public Utils(ThemisToDiscord ttd, YamlDocument configDocument) {
+        if (ttd.getServer().getPluginManager().isPluginEnabled("Floodgate")) {
+            ttd.log("Found Floodgate! Enabling features...");
+            floodgateApi = FloodgateApi.getInstance();
+        } else {
+            ttd.log(LogLevel.WARN, "Floodgate not found! Some features may be disabled.");
+        }
+        this.config = configDocument;
+    }
 
     @Nullable
-    public static String handleFloodgatePlaceholders(@Nullable String str, @NotNull Player player) {
+    public String handleFloodgatePlaceholders(@Nullable String str, @NotNull Player player) {
         if (str == null) {return null;}
         String os;
-        if (ThemisToDiscord.floodgateApi == null) {
+        if (floodgateApi == null) {
             os = "install_floodgate";
         } else {
-            if (ThemisToDiscord.floodgateApi.isFloodgatePlayer(player.getUniqueId())) {
-                os = ThemisToDiscord.floodgateApi.getPlayer(player.getUniqueId()).getDeviceOs() + "";
+            if (floodgateApi.isFloodgatePlayer(player.getUniqueId())) {
+                os = floodgateApi.getPlayer(player.getUniqueId()).getDeviceOs() + "";
             } else {
                 os = "Java";
             }
@@ -24,12 +39,12 @@ public class Utils {
     }
 
     @Nullable
-    public static String handleAvatarUrlPlaceholders(@Nullable String str, @NotNull Player player) {
+    public String handleAvatarUrlPlaceholders(@Nullable String str, @NotNull Player player) {
         if (str == null) {return null;}
         return str
                 .replaceAll(
                         "%avatar_url%",
-                        handlePlayerPlaceholders(ThemisToDiscord.config.get().getString("AvatarUrl"), player)
+                        handlePlayerPlaceholders(config.getString("AvatarUrl"), player)
                 );
     }
 
@@ -58,7 +73,7 @@ public class Utils {
     }
 
     @Nullable
-    public static String handleAllPlaceholders(
+    public String handleAllPlaceholders(
             @Nullable String str,
             @NotNull Player player,
             @NotNull String detectionType,
@@ -84,4 +99,8 @@ public class Utils {
         );
     }
 
+    public static boolean isInvalidWebhookUrl(@Nullable String url) {
+        if (url == null) return true;
+        return !DiscordWebhook.WEBHOOK_PATTERN.matcher(url).matches();
+    }
 }

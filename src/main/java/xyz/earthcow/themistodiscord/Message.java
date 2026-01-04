@@ -19,6 +19,11 @@ import java.util.concurrent.Executors;
 
 public class Message {
     @NotNull
+    private final ThemisToDiscord ttd;
+    @NotNull
+    private final Utils utils;
+    
+    @NotNull
     private final Section message;
     @NotNull
     private final String name;
@@ -34,7 +39,10 @@ public class Message {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public Message(@NotNull Section message) {
+    public Message(@NotNull ThemisToDiscord ttd, @NotNull Utils utils, @NotNull Section message) {
+        this.ttd = ttd;
+        this.utils = utils;
+        
         this.message = message;
         this.name = message.getNameAsString();
 
@@ -42,9 +50,9 @@ public class Message {
         String localWebhookUrl;
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
             localWebhookUrl = message.getString("CustomWebhook.Url", "");
-            if (ThemisToDiscord.isInvalidWebhookUrl(localWebhookUrl)) {
+            if (Utils.isInvalidWebhookUrl(localWebhookUrl)) {
                 if (!localWebhookUrl.isEmpty()) {
-                    ThemisToDiscord.log(LogLevel.WARN,  "Invalid custom webhook url for message: " + name + "! This message will use the global webhook url.");
+                    ttd.log(LogLevel.WARN,  "Invalid custom webhook url for message: " + name + "! This message will use the global webhook url.");
                 }
                 localWebhookUrl = message.getRoot().getString("webhookUrl");
             }
@@ -78,12 +86,12 @@ public class Message {
         // Set the custom webhook parameters
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
             webhook.setUsername(
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     message.getString("CustomWebhook.Name"),
                     player, detectionType, score, ping, tps)
             );
             webhook.setAvatarUrl(
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     message.getString("CustomWebhook.AvatarUrl"),
                     player, detectionType, score, ping, tps)
             );
@@ -91,7 +99,7 @@ public class Message {
 
         // Set the message content
         webhook.setContent(
-            Utils.handleAllPlaceholders(
+            utils.handleAllPlaceholders(
                 message.getString("Content"),
                 player, detectionType, score, ping, tps
             )
@@ -112,23 +120,23 @@ public class Message {
                 Color.decode(colorStr)
             );
         } catch (NumberFormatException e) {
-            ThemisToDiscord.log(LogLevel.WARN, "Invalid color string: " + colorStr +  " for message: " + name + ". Using black.");
-            ThemisToDiscord.log(LogLevel.DEBUG, "Exception: " + e);
+            ttd.log(LogLevel.WARN, "Invalid color string: " + colorStr +  " for message: " + name + ". Using black.");
+            ttd.log(LogLevel.DEBUG, "Exception: " + e);
             embed.setColor(Color.BLACK);
         }
 
         // Set the author
         if (embedSection.get("Author", null) != null) {
             embed.setAuthor(
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Author.Name"),
                     player, detectionType, score, ping, tps
                 ),
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Author.Url"),
                     player, detectionType, score, ping, tps
                 ),
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Author.ImageUrl"),
                     player, detectionType, score, ping, tps
                 )
@@ -141,13 +149,13 @@ public class Message {
         // Set the title
         if (embedSection.get("Title", null) != null) {
             embed.setTitle(
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Title.Text", null),
                     player, detectionType, score, ping, tps
                 )
             );
             embed.setUrl(
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Title.Url", null),
                     player, detectionType, score, ping, tps
                 )
@@ -156,7 +164,7 @@ public class Message {
 
         // Set the description
         embed.setDescription(
-            Utils.handleAllPlaceholders(
+            utils.handleAllPlaceholders(
                 embedSection.getString("Description", null),
                 player, detectionType, score, ping, tps
             )
@@ -177,11 +185,11 @@ public class Message {
                     boolean inline = parts.length < 3 || Boolean.parseBoolean(parts[2]);
 
                     embed.addField(
-                        Utils.handleAllPlaceholders(
+                        utils.handleAllPlaceholders(
                             parts[0],
                             player, detectionType, score, ping, tps
                         ),
-                        Utils.handleAllPlaceholders(
+                        utils.handleAllPlaceholders(
                             parts[1],
                             player, detectionType, score, ping, tps
                         ),
@@ -197,7 +205,7 @@ public class Message {
 
         // Set the image url
         embed.setImage(
-            Utils.handleAllPlaceholders(
+            utils.handleAllPlaceholders(
                 embedSection.getString("ImageUrl", null),
                 player, detectionType, score, ping, tps
             )
@@ -206,11 +214,11 @@ public class Message {
         // Set the footer
         if (embedSection.get("Footer", null) != null) {
             embed.setFooter(
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Footer.Text", null),
                     player, detectionType, score, ping, tps
                 ),
-                Utils.handleAllPlaceholders(
+                utils.handleAllPlaceholders(
                     embedSection.getString("Footer.IconUrl", null),
                     player, detectionType, score, ping, tps
                 )
@@ -235,7 +243,7 @@ public class Message {
                 if (jsonString.isEmpty() || jsonString.equals("{}")) {
                     webhook.execute();
                 } else {
-                    webhook.execute(Utils.handleAllPlaceholders(jsonString, player, detectionType, score, ping, tps));
+                    webhook.execute(utils.handleAllPlaceholders(jsonString, player, detectionType, score, ping, tps));
                 }
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
@@ -273,7 +281,7 @@ public class Message {
                                     break;
                             }
                         } catch (IndexOutOfBoundsException | NumberFormatException ex) {
-                            ThemisToDiscord.log(LogLevel.DEBUG, "Secondary exception: " + ex);
+                            ttd.log(LogLevel.DEBUG, "Secondary exception: " + ex);
                         }
                     }
                 }
@@ -284,9 +292,9 @@ public class Message {
                 if (sender != null) {
                     sender.sendMessage(ChatColor.RED + msg);
                 }
-                ThemisToDiscord.log(LogLevel.ERROR, msg);
-                ThemisToDiscord.log(LogLevel.DEBUG, "Exception: " + e);
-                ThemisToDiscord.log(LogLevel.DEBUG, "Webhook: " +
+                ttd.log(LogLevel.ERROR, msg);
+                ttd.log(LogLevel.DEBUG, "Exception: " + e);
+                ttd.log(LogLevel.DEBUG, "Webhook: " +
                         (jsonString.isEmpty() || jsonString.equals("{}") ? webhook.getJsonString() : jsonString));
             }
         });
@@ -304,7 +312,7 @@ public class Message {
         // Should only be performed upon reload
         int unsentMessages = executor.shutdownNow().size();
         if (unsentMessages > 0) {
-            ThemisToDiscord.log(LogLevel.WARN, unsentMessages + " messages were cancelled. For message: " + name);
+            ttd.log(LogLevel.WARN, unsentMessages + " messages were cancelled. For message: " + name);
         }
     }
 

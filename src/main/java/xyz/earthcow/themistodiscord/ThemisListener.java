@@ -9,7 +9,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 public class ThemisListener implements Listener {
+    private final ThemisToDiscord ttd;
+    private final Configuration config;
     private boolean pingSupportedVersion = true;
+
+    public ThemisListener(ThemisToDiscord ttd, Configuration config) {
+        this.ttd = ttd;
+        this.config = config;
+    }
 
     @EventHandler
     public void onViolationEvent(ViolationEvent event) {
@@ -22,14 +29,14 @@ public class ThemisListener implements Listener {
                 ping = (ThemisApi.getPing(player) != null) ? ThemisApi.getPing(player) : 0;
                 tps = ThemisApi.getTps();
             } catch (NoSuchMethodError e) {
-                ThemisToDiscord.log(LogLevel.WARN, "Please update Themis to 0.15.3 or higher for player ping and server tps!");
+                ttd.log(LogLevel.WARN, "Please update Themis to 0.15.3 or higher for player ping and server tps!");
                 pingSupportedVersion = false;
             }
         }
 
         double score = Math.round(ThemisApi.getViolationScore(player, checkType) * 100.0) / 100.0;
 
-        for (Message message : ThemisToDiscord.config.getMessages()) {
+        for (Message message : config.getMessages()) {
             Section handling = message.getHandling();
 
             if (handling == null || !handling.getBoolean("Enabled", false)) {
