@@ -7,12 +7,22 @@ import dev.dejvokep.boostedyaml.block.implementation.Section;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.NotNull;
 
 public class ThemisListener implements Listener {
+    @NotNull
+    private final ThemisToDiscord ttd;
+    @NotNull
+    private final Configuration config;
     private boolean pingSupportedVersion = true;
 
+    public ThemisListener(@NotNull ThemisToDiscord ttd, @NotNull Configuration config) {
+        this.ttd = ttd;
+        this.config = config;
+    }
+
     @EventHandler
-    public void onViolationEvent(ViolationEvent event) {
+    public void onViolationEvent(@NotNull ViolationEvent event) {
         Player player = event.getPlayer();
         CheckType checkType = event.getType();
 
@@ -22,14 +32,14 @@ public class ThemisListener implements Listener {
                 ping = (ThemisApi.getPing(player) != null) ? ThemisApi.getPing(player) : 0;
                 tps = ThemisApi.getTps();
             } catch (NoSuchMethodError e) {
-                ThemisToDiscord.log(LogLevel.WARN, "Please update Themis to 0.15.3 or higher for player ping and server tps!");
+                ttd.log(LogLevel.WARN, "Please update Themis to 0.15.3 or higher for player ping and server tps!");
                 pingSupportedVersion = false;
             }
         }
 
         double score = Math.round(ThemisApi.getViolationScore(player, checkType) * 100.0) / 100.0;
 
-        for (Message message : ThemisToDiscord.config.getMessages()) {
+        for (Message message : config.getMessages()) {
             Section handling = message.getHandling();
 
             if (handling == null || !handling.getBoolean("Enabled", false)) {
