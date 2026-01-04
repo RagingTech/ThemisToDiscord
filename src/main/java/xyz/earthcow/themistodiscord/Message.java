@@ -25,9 +25,6 @@ public class Message {
     @NotNull
     private final String webhookUrl;
 
-    @NotNull
-    private DiscordWebhook webhook;
-
     @Nullable
     private final Section handling;
 
@@ -56,22 +53,27 @@ public class Message {
         }
         // Set the webhook url for this message
         this.webhookUrl = localWebhookUrl;
-        this.webhook = new DiscordWebhook(localWebhookUrl);
 
         // Define the handling section
         this.handling = message.getSection("Handling", null);
 
     }
 
-    private void handleMessageContent(
+    private DiscordWebhook constructWebhook(
         @NotNull Player player,
         @NotNull String detectionType,
         double score,
         double ping,
         double tps
     ) {
-        // Define a new webhook object to clear previous contents (mostly for embeds)
-        this.webhook = new DiscordWebhook(webhookUrl);
+        // Create a new webhook object
+        DiscordWebhook webhook = new DiscordWebhook(webhookUrl);
+
+        // Return the webhook url if JSON is set
+        String jsonString = message.getString("Json", "");
+        if (!jsonString.isEmpty() && !jsonString.equals("{}")) {
+            return webhook;
+        }
 
         // Set the custom webhook parameters
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
@@ -97,7 +99,7 @@ public class Message {
 
         Section embedSection = message.getSection("Embed");
         if (embedSection == null) {
-            return;
+            return webhook;
         }
 
         // Define the embed object
@@ -221,15 +223,16 @@ public class Message {
         }
 
         webhook.addEmbed(embed);
+        return webhook;
     }
 
     public void execute(@NotNull Player player, @NotNull String detectionType, double score, double ping, double tps, @Nullable CommandSender sender) {
         // Using a single thread executor ensures messages are not concurrently modified and sent in succession
         executor.submit(() -> {
+            DiscordWebhook webhook = constructWebhook(player, detectionType, score, ping, tps);
+            String jsonString = message.getString("Json", "");
             try {
-                String jsonString = message.getString("Json", "");
                 if (jsonString.isEmpty() || jsonString.equals("{}")) {
-                    handleMessageContent(player, detectionType, score, ping, tps);
                     webhook.execute();
                 } else {
                     webhook.execute(Utils.handleAllPlaceholders(jsonString, player, detectionType, score, ping, tps));
@@ -283,7 +286,8 @@ public class Message {
                 }
                 ThemisToDiscord.log(LogLevel.ERROR, msg);
                 ThemisToDiscord.log(LogLevel.DEBUG, "Exception: " + e);
-                ThemisToDiscord.log(LogLevel.DEBUG, "Webhook: " + webhook.getJsonString());
+                ThemisToDiscord.log(LogLevel.DEBUG, "Webhook: " +
+                        (jsonString.isEmpty() || jsonString.equals("{}") ? webhook.getJsonString() : jsonString));
             }
         });
     }
