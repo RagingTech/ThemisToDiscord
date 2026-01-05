@@ -114,7 +114,7 @@ public class Message {
         DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
 
         // Set the color
-        String colorStr = embedSection.getString("Color").replaceAll("%category_color%", message.getRoot().getString("categoryColors." + detectionType));
+        String colorStr = embedSection.getString("Color").replace("%category_color%", message.getRoot().getString("categoryColors." + detectionType));
         try {
             embed.setColor(
                 Color.decode(colorStr)

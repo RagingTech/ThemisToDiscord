@@ -37,14 +37,14 @@ public class Utils {
             }
         }
         return str
-                .replaceAll("%os%", os);
+                .replace("%os%", os);
     }
 
     @Nullable
     public String handleAvatarUrlPlaceholders(@Nullable String str, @NotNull Player player) {
         if (str == null) {return null;}
         return str
-                .replaceAll(
+                .replace(
                         "%avatar_url%",
                         handlePlayerPlaceholders(config.getString("AvatarUrl"), player)
                 );
@@ -54,24 +54,24 @@ public class Utils {
     public static String handlePlayerPlaceholders(@Nullable String str, @NotNull Player player) {
         if (str == null) {return null;}
         return str
-                .replaceAll("%player_name%", player.getName())
-                .replaceAll("%player_uuid%", player.getUniqueId() + "");
+                .replace("%player_name%", player.getName())
+                .replace("%player_uuid%", player.getUniqueId() + "");
     }
 
     @Nullable
     public static String handleDetectionTypePlaceholders(@Nullable String str, @NotNull String detectionType) {
         if (str == null) {return null;}
         return str
-                .replaceAll("%detection_type%", detectionType);
+                .replace("%detection_type%", detectionType);
     }
 
     @Nullable
     public static String handleStatPlaceholders(@Nullable String str, double score, double ping, double tps) {
         if (str == null) {return null;}
         return str
-                .replaceAll("%score%", score + "")
-                .replaceAll("%ping%", ping + "")
-                .replaceAll("%tps%", tps + "");
+                .replace("%score%", score + "")
+                .replace("%ping%", ping + "")
+                .replace("%tps%", tps + "");
     }
 
     @Nullable
