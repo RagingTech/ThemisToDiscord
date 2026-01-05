@@ -28,7 +28,11 @@ public class Message {
     @NotNull
     private final String name;
     @NotNull
-    private final String webhookUrl;
+    private final DiscordWebhook webhook;
+    @NotNull
+    private final String webhookJson;
+
+    private final boolean hasExplicitJson;
 
     @Nullable
     private final Section handling;
@@ -59,87 +63,64 @@ public class Message {
         } else {
             localWebhookUrl = message.getRoot().getString("webhookUrl");
         }
-        // Set the webhook url for this message
-        this.webhookUrl = localWebhookUrl;
+        // Set the webhook for this message
+        this.webhook = new DiscordWebhook(localWebhookUrl);
+
+        // Set if the message uses explicit json
+        String jsonString = message.getString("Json", "");
+        this.hasExplicitJson = !jsonString.isEmpty() && !jsonString.equals("{}");
+
+        // Determine and set the webhook json
+        if (hasExplicitJson) {
+            this.webhookJson = jsonString;
+        } else {
+            fillWebhookContent(webhook);
+            this.webhookJson = webhook.getJsonString();
+        }
 
         // Define the handling section
         this.handling = message.getSection("Handling", null);
 
     }
 
-    private DiscordWebhook constructWebhook(
-        @NotNull Player player,
-        @NotNull String detectionType,
-        double score,
-        double ping,
-        double tps
-    ) {
-        // Create a new webhook object
-        DiscordWebhook webhook = new DiscordWebhook(webhookUrl);
-
-        // Return the webhook url if JSON is set
-        String jsonString = message.getString("Json", "");
-        if (!jsonString.isEmpty() && !jsonString.equals("{}")) {
-            return webhook;
-        }
-
+    private void fillWebhookContent(@NotNull DiscordWebhook webhookToFill) {
         // Set the custom webhook parameters
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
-            webhook.setUsername(
-                utils.handleAllPlaceholders(
-                    message.getString("CustomWebhook.Name"),
-                    player, detectionType, score, ping, tps)
-            );
-            webhook.setAvatarUrl(
-                utils.handleAllPlaceholders(
-                    message.getString("CustomWebhook.AvatarUrl"),
-                    player, detectionType, score, ping, tps)
-            );
+            webhookToFill.setUsername(message.getString("CustomWebhook.Name"));
+            webhookToFill.setAvatarUrl(message.getString("CustomWebhook.AvatarUrl"));
         }
 
         // Set the message content
-        webhook.setContent(
-            utils.handleAllPlaceholders(
-                message.getString("Content"),
-                player, detectionType, score, ping, tps
-            )
-        );
+        webhookToFill.setContent(message.getString("Content"));
 
         Section embedSection = message.getSection("Embed");
         if (embedSection == null) {
-            return webhook;
+            return;
         }
 
         // Define the embed object
         DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
 
         // Set the color
-        String colorStr = embedSection.getString("Color").replace("%category_color%", message.getRoot().getString("categoryColors." + detectionType));
-        try {
-            embed.setColor(
-                Color.decode(colorStr)
-            );
-        } catch (NumberFormatException e) {
-            ttd.log(LogLevel.WARN, "Invalid color string: " + colorStr +  " for message: " + name + ". Using black.");
-            ttd.log(LogLevel.DEBUG, "Exception: " + e);
-            embed.setColor(Color.BLACK);
+        String colorStr = embedSection.getString("Color", "");
+        if (!colorStr.contains("%category_color%")) {
+            try {
+                embed.setColor(
+                    Color.decode(colorStr)
+                );
+            } catch (NumberFormatException e) {
+                ttd.log(LogLevel.WARN, "Invalid color string: " + colorStr +  " for message: " + name + ". Using black.");
+                ttd.log(LogLevel.DEBUG, "Exception: " + e);
+                embed.setColor(Color.BLACK);
+            }
         }
 
         // Set the author
         if (embedSection.get("Author", null) != null) {
             embed.setAuthor(
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Author.Name"),
-                    player, detectionType, score, ping, tps
-                ),
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Author.Url"),
-                    player, detectionType, score, ping, tps
-                ),
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Author.ImageUrl"),
-                    player, detectionType, score, ping, tps
-                )
+                embedSection.getString("Author.Name"),
+                embedSection.getString("Author.Url"),
+                embedSection.getString("Author.ImageUrl")
             );
         }
 
@@ -148,27 +129,12 @@ public class Message {
 
         // Set the title
         if (embedSection.get("Title", null) != null) {
-            embed.setTitle(
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Title.Text", null),
-                    player, detectionType, score, ping, tps
-                )
-            );
-            embed.setUrl(
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Title.Url", null),
-                    player, detectionType, score, ping, tps
-                )
-            );
+            embed.setTitle(embedSection.getString("Title.Text", null));
+            embed.setUrl(embedSection.getString("Title.Url", null));
         }
 
         // Set the description
-        embed.setDescription(
-            utils.handleAllPlaceholders(
-                embedSection.getString("Description", null),
-                player, detectionType, score, ping, tps
-            )
-        );
+        embed.setDescription(embedSection.getString("Description", null));
 
         // Set the fields
         List<String> fields = embedSection.getStringList("Fields");
@@ -184,17 +150,7 @@ public class Message {
 
                     boolean inline = parts.length < 3 || Boolean.parseBoolean(parts[2]);
 
-                    embed.addField(
-                        utils.handleAllPlaceholders(
-                            parts[0],
-                            player, detectionType, score, ping, tps
-                        ),
-                        utils.handleAllPlaceholders(
-                            parts[1],
-                            player, detectionType, score, ping, tps
-                        ),
-                        inline
-                    );
+                    embed.addField(parts[0], parts[1], inline);
                 } else {
                     boolean inline = Boolean.parseBoolean(field);
                     embed.addField("\u200e", "\u200e", inline);
@@ -204,24 +160,13 @@ public class Message {
         }
 
         // Set the image url
-        embed.setImage(
-            utils.handleAllPlaceholders(
-                embedSection.getString("ImageUrl", null),
-                player, detectionType, score, ping, tps
-            )
-        );
+        embed.setImage(embedSection.getString("ImageUrl", null));
 
         // Set the footer
         if (embedSection.get("Footer", null) != null) {
             embed.setFooter(
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Footer.Text", null),
-                    player, detectionType, score, ping, tps
-                ),
-                utils.handleAllPlaceholders(
-                    embedSection.getString("Footer.IconUrl", null),
-                    player, detectionType, score, ping, tps
-                )
+                embedSection.getString("Footer.Text", null),
+                embedSection.getString("Footer.IconUrl", null)
             );
         }
 
@@ -230,20 +175,38 @@ public class Message {
             embed.setTimestamp((new Date()).toInstant());
         }
 
-        webhook.addEmbed(embed);
-        return webhook;
+        webhookToFill.addEmbed(embed);
     }
 
     public void execute(@NotNull Player player, @NotNull String detectionType, double score, double ping, double tps, @Nullable CommandSender sender) {
         // Using a single thread executor ensures messages are not concurrently modified and sent in succession
         executor.submit(() -> {
-            DiscordWebhook webhook = constructWebhook(player, detectionType, score, ping, tps);
-            String jsonString = message.getString("Json", "");
             try {
-                if (jsonString.isEmpty() || jsonString.equals("{}")) {
-                    webhook.execute();
+                if (hasExplicitJson) {
+                    webhook.execute(utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps));
                 } else {
-                    webhook.execute(utils.handleAllPlaceholders(jsonString, player, detectionType, score, ping, tps));
+                    Section embedSection = message.getSection("Embed");
+                    if (embedSection != null && embedSection.getString("Color").contains("%category_color%") && !webhook.getEmbeds().isEmpty()) {
+                        DiscordWebhook.EmbedObject embed = webhook.getEmbeds().getFirst();
+                        // Set the color
+                        String colorStr = embedSection.getString("Color")
+                                .replace(
+                                        "%category_color%",
+                                        message.getRoot().getString("categoryColors." + detectionType)
+                                );
+                        try {
+                            embed.setColor(
+                                Color.decode(colorStr)
+                            );
+                        } catch (NumberFormatException e) {
+                            ttd.log(LogLevel.WARN, "Invalid color string: " + colorStr +  " for message: " + name + ". Using black.");
+                            ttd.log(LogLevel.DEBUG, "Exception: " + e);
+                            embed.setColor(Color.BLACK);
+                        }
+                        webhook.execute(utils.handleAllPlaceholders(webhook.getJsonString(), player, detectionType, score, ping, tps));
+                    } else {
+                        webhook.execute(utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps));
+                    }
                 }
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
@@ -294,8 +257,7 @@ public class Message {
                 }
                 ttd.log(LogLevel.ERROR, msg);
                 ttd.log(LogLevel.DEBUG, "Exception: " + e);
-                ttd.log(LogLevel.DEBUG, "Webhook: " +
-                        (jsonString.isEmpty() || jsonString.equals("{}") ? webhook.getJsonString() : jsonString));
+                ttd.log(LogLevel.DEBUG, "Webhook: " + webhookJson);
             }
         });
     }
