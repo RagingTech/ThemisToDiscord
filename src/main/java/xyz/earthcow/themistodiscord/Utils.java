@@ -23,9 +23,8 @@ public class Utils {
         this.config = configDocument;
     }
 
-    @Nullable
-    public String handleFloodgatePlaceholders(@Nullable String str, @NotNull Player player) {
-        if (str == null) {return null;}
+    @NotNull
+    private String handleFloodgatePlaceholders(@NotNull String str, @NotNull Player player) {
         String os;
         if (floodgateApi == null) {
             os = "install_floodgate";
@@ -41,40 +40,6 @@ public class Utils {
     }
 
     @Nullable
-    public String handleAvatarUrlPlaceholders(@Nullable String str, @NotNull Player player) {
-        if (str == null) {return null;}
-        return str
-                .replace(
-                        "%avatar_url%",
-                        handlePlayerPlaceholders(config.getString("AvatarUrl"), player)
-                );
-    }
-
-    @Nullable
-    public static String handlePlayerPlaceholders(@Nullable String str, @NotNull Player player) {
-        if (str == null) {return null;}
-        return str
-                .replace("%player_name%", player.getName())
-                .replace("%player_uuid%", player.getUniqueId() + "");
-    }
-
-    @Nullable
-    public static String handleDetectionTypePlaceholders(@Nullable String str, @NotNull String detectionType) {
-        if (str == null) {return null;}
-        return str
-                .replace("%detection_type%", detectionType);
-    }
-
-    @Nullable
-    public static String handleStatPlaceholders(@Nullable String str, double score, double ping, double tps) {
-        if (str == null) {return null;}
-        return str
-                .replace("%score%", score + "")
-                .replace("%ping%", ping + "")
-                .replace("%tps%", tps + "");
-    }
-
-    @Nullable
     public String handleAllPlaceholders(
             @Nullable String str,
             @NotNull Player player,
@@ -83,22 +48,17 @@ public class Utils {
             double ping,
             double tps
     ) {
-        if (str == null) {return null;}
-        return handleStatPlaceholders(
-                handleDetectionTypePlaceholders(
-                        handlePlayerPlaceholders(
-                                handleAvatarUrlPlaceholders(
-                                    handleFloodgatePlaceholders(
-                                        str, player
-                                    ),
-                                    player
-                                ),
-                                player
-                        ),
-                        detectionType
-                ),
-                score, ping, tps
-        );
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return handleFloodgatePlaceholders(str, player)
+                .replace("%avatar_url%", config.getString("AvatarUrl"))
+                .replace("%player_name%", player.getName())
+                .replace("%player_uuid%", player.getUniqueId() + "")
+                .replace("%detection_type%", detectionType)
+                .replace("%score%", score + "")
+                .replace("%ping%", ping + "")
+                .replace("%tps%", tps + "");
     }
 
     public static boolean isInvalidWebhookUrl(@Nullable String url) {
