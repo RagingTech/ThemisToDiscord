@@ -30,7 +30,7 @@ public class Utils {
             os = "install_floodgate";
         } else {
             if (floodgateApi.isFloodgatePlayer(player.getUniqueId())) {
-                os = floodgateApi.getPlayer(player.getUniqueId()).getDeviceOs() + "";
+                os = floodgateApi.getPlayer(player.getUniqueId()).getDeviceOs().toString();
             } else {
                 os = "Java";
             }
@@ -54,11 +54,11 @@ public class Utils {
         return handleFloodgatePlaceholders(str, player)
                 .replace("%avatar_url%", config.getString("AvatarUrl"))
                 .replace("%player_name%", player.getName())
-                .replace("%player_uuid%", player.getUniqueId() + "")
+                .replace("%player_uuid%", player.getUniqueId().toString())
                 .replace("%detection_type%", detectionType)
-                .replace("%score%", score + "")
-                .replace("%ping%", ping + "")
-                .replace("%tps%", tps + "");
+                .replace("%score%", Double.toString(score))
+                .replace("%ping%", Double.toString(ping))
+                .replace("%tps%", Double.toString(tps));
     }
 
     public static boolean isInvalidWebhookUrl(@Nullable String url) {
