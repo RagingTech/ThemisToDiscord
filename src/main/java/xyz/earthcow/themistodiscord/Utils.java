@@ -24,7 +24,7 @@ public class Utils {
     }
 
     @NotNull
-    private String handleFloodgatePlaceholders(@NotNull String str, @NotNull Player player) {
+    private String getPlayerOs(@NotNull Player player) {
         String os;
         if (floodgateApi == null) {
             os = "install_floodgate";
@@ -35,8 +35,7 @@ public class Utils {
                 os = "Java";
             }
         }
-        return str
-                .replace("%os%", os);
+        return os;
     }
 
     @Nullable
@@ -51,8 +50,9 @@ public class Utils {
         if (str == null || str.isEmpty()) {
             return str;
         }
-        return handleFloodgatePlaceholders(str, player)
-                .replace("%avatar_url%", config.getString("AvatarUrl"))
+        return str
+                .replace("%avatar_url%", config.getString("AvatarUrl", ""))
+                .replace("%os%", getPlayerOs(player))
                 .replace("%player_name%", player.getName())
                 .replace("%player_uuid%", player.getUniqueId().toString())
                 .replace("%detection_type%", detectionType)
