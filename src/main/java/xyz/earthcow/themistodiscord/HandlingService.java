@@ -5,6 +5,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -22,10 +23,25 @@ public class HandlingService {
     private static final long DEFAULT_LAST_SENT = 0;
     private static final int DEFAULT_REPETITION_COUNT = -2;
 
-    public HandlingService(Section handlingSection) {
-        this.executionThreshold = handlingSection.getDouble("execution-threshold");
-        this.repetitionDelay = handlingSection.getDouble("repetition-delay");
-        this.repetitionThreshold = handlingSection.getDouble("repetition-threshold");
+    public HandlingService(@NotNull Section handlingSection, @NotNull String msgName, @NotNull ThemisToDiscord ttd) {
+        double localExecutionThreshold = handlingSection.getDouble("execution-threshold");
+        double localRepetitionDelay = handlingSection.getDouble("repetition-delay");
+        double localRepetitionThreshold = handlingSection.getDouble("repetition-threshold");
+        if (localExecutionThreshold < 1) {
+            ttd.log(LogLevel.WARN, "Execution threshold must be positive! Message: " + msgName + " will use the default of 10.0");
+            localExecutionThreshold = 10.0;
+        }
+        if (localRepetitionDelay < 1 || localRepetitionDelay >= 86400) {
+            ttd.log(LogLevel.WARN, "Repetition delay must be positive and less than 24 hours! Message: " + msgName + " will use the default of 10.0");
+            localRepetitionDelay = 10.0;
+        }
+        if (localRepetitionThreshold < 1) {
+            ttd.log(LogLevel.WARN, "Repetition threshold must be positive! Message: " + msgName + " will use the default of 5.0");
+            localRepetitionThreshold = 5.0;
+        }
+        this.executionThreshold = localExecutionThreshold;
+        this.repetitionDelay = localRepetitionDelay;
+        this.repetitionThreshold = localRepetitionThreshold;
 
         this.playerCheckData = CacheBuilder.newBuilder()
                 .expireAfterAccess(24, TimeUnit.HOURS)

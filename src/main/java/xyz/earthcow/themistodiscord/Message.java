@@ -41,7 +41,7 @@ public class Message {
         this.utils = utils;
         
         this.message = message;
-        this.name = message.getNameAsString();
+        this.name = Objects.requireNonNull(message.getNameAsString());
 
         // Discover the webhook url to be used
         String localWebhookUrl;
@@ -70,7 +70,7 @@ public class Message {
         // Define the handling service
         Section handlingSection = message.getSection("Handling", null);
         if (handlingSection != null && handlingSection.getBoolean("Enabled", false)) {
-            this.handling = new HandlingService(handlingSection);
+            this.handling = new HandlingService(handlingSection, name, ttd);
         } else {
             this.handling = null;
         }
