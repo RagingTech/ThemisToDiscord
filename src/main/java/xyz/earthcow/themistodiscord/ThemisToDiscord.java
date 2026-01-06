@@ -26,7 +26,13 @@ public final class ThemisToDiscord extends JavaPlugin {
     }
 
     @Override
-    public void onDisable() {}
+    public void onDisable() {
+        if (config != null) {
+            for (Message message : config.getMessages()) {
+                message.forceExecutorShutdown();
+            }
+        }
+    }
 
     public void log(String message) {
         getLogger().info(message);
