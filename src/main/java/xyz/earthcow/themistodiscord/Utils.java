@@ -56,10 +56,18 @@ public class Utils {
                 .replace("%player_name%", player.getName())
                 .replace("%player_uuid%", player.getUniqueId().toString())
                 .replace("%detection_type%", detectionType)
-                .replace("%category_color%", config.getString("categoryColors." + detectionType))
+                .replace("%category_color%", hexToInteger(config.getString("categoryColors." + detectionType)).toString())
                 .replace("%score%", Double.toString(score))
                 .replace("%ping%", Double.toString(ping))
                 .replace("%tps%", Double.toString(tps));
+    }
+
+    private Integer hexToInteger(String hex) {
+        try {
+            return Integer.parseInt(hex.replace("#", ""), 16);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     public static boolean isInvalidWebhookUrl(@Nullable String url) {
