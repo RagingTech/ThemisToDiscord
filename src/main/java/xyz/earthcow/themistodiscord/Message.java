@@ -28,11 +28,9 @@ public class Message {
     @NotNull
     private final String name;
     @NotNull
-    private final DiscordWebhook webhook;
+    private final String webhookUrl;
     @NotNull
     private final String webhookJson;
-
-    private final boolean hasExplicitJson;
 
     @Nullable
     private final Section handling;
@@ -63,19 +61,15 @@ public class Message {
         } else {
             localWebhookUrl = message.getRoot().getString("webhookUrl");
         }
-        // Set the webhook for this message
-        this.webhook = new DiscordWebhook(localWebhookUrl);
-
-        // Set if the message uses explicit json
-        String jsonString = message.getString("Json", "");
-        this.hasExplicitJson = !jsonString.isEmpty() && !jsonString.equals("{}");
+        // Set the webhook url for this message
+        this.webhookUrl = localWebhookUrl;
 
         // Determine and set the webhook json
-        if (hasExplicitJson) {
+        String jsonString = message.getString("Json", "");
+        if (!jsonString.isEmpty() && !jsonString.equals("{}")) {
             this.webhookJson = jsonString;
         } else {
-            fillWebhookContent(webhook);
-            this.webhookJson = webhook.getJsonString();
+            this.webhookJson = getJsonWebhook();
         }
 
         // Define the handling section
@@ -83,19 +77,21 @@ public class Message {
 
     }
 
-    private void fillWebhookContent(@NotNull DiscordWebhook webhookToFill) {
+    private String getJsonWebhook() {
+        DiscordWebhook webhook = new DiscordWebhook();
+
         // Set the custom webhook parameters
         if (message.getBoolean("CustomWebhook.Enabled", false)) {
-            webhookToFill.setUsername(message.getString("CustomWebhook.Name"));
-            webhookToFill.setAvatarUrl(message.getString("CustomWebhook.AvatarUrl"));
+            webhook.setUsername(message.getString("CustomWebhook.Name"));
+            webhook.setAvatarUrl(message.getString("CustomWebhook.AvatarUrl"));
         }
 
         // Set the message content
-        webhookToFill.setContent(message.getString("Content"));
+        webhook.setContent(message.getString("Content"));
 
         Section embedSection = message.getSection("Embed");
         if (embedSection == null) {
-            return;
+            return webhook.getJsonString();
         }
 
         // Define the embed object
@@ -103,7 +99,9 @@ public class Message {
 
         // Set the color
         String colorStr = embedSection.getString("Color", "");
-        if (!colorStr.contains("%category_color%")) {
+        if (colorStr.contains("%category_color%")) {
+            embed.setColorStr(colorStr);
+        } else {
             try {
                 embed.setColor(
                     Color.decode(colorStr)
@@ -175,39 +173,15 @@ public class Message {
             embed.setTimestamp((new Date()).toInstant());
         }
 
-        webhookToFill.addEmbed(embed);
+        webhook.addEmbed(embed);
+        return webhook.getJsonString();
     }
 
     public void execute(@NotNull Player player, @NotNull String detectionType, double score, double ping, double tps, @Nullable CommandSender sender) {
         // Using a single thread executor ensures messages are not concurrently modified and sent in succession
         executor.submit(() -> {
             try {
-                if (hasExplicitJson) {
-                    webhook.execute(utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps));
-                } else {
-                    Section embedSection = message.getSection("Embed");
-                    if (embedSection != null && embedSection.getString("Color").contains("%category_color%") && !webhook.getEmbeds().isEmpty()) {
-                        DiscordWebhook.EmbedObject embed = webhook.getEmbeds().getFirst();
-                        // Set the color
-                        String colorStr = embedSection.getString("Color")
-                                .replace(
-                                        "%category_color%",
-                                        message.getRoot().getString("categoryColors." + detectionType)
-                                );
-                        try {
-                            embed.setColor(
-                                Color.decode(colorStr)
-                            );
-                        } catch (NumberFormatException e) {
-                            ttd.log(LogLevel.WARN, "Invalid color string: " + colorStr +  " for message: " + name + ". Using black.");
-                            ttd.log(LogLevel.DEBUG, "Exception: " + e);
-                            embed.setColor(Color.BLACK);
-                        }
-                        webhook.execute(utils.handleAllPlaceholders(webhook.getJsonString(), player, detectionType, score, ping, tps));
-                    } else {
-                        webhook.execute(utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps));
-                    }
-                }
+                DiscordWebhook.execute(webhookUrl, utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps));
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }
