@@ -18,6 +18,9 @@ public class HandlingService {
     private final double repetitionDelay;
     private final double repetitionThreshold;
 
+    private static final long DEFAULT_LAST_SENT = 0;
+    private static final int DEFAULT_REPETITION_COUNT = -2;
+
     public HandlingService(Section handlingSection) {
         this.executionThreshold = handlingSection.getDouble("execution-threshold");
         this.repetitionDelay = handlingSection.getDouble("repetition-delay");
@@ -38,7 +41,7 @@ public class HandlingService {
 
     public long getLastSentTimeForPlayer(Player player, CheckType checkType) {
         CheckData checkData = playerCheckData.get(new CheckKey(player.getUniqueId(), checkType));
-        if (checkData == null) return 0;
+        if (checkData == null) return DEFAULT_LAST_SENT;
         return checkData.lastSent;
     }
 
@@ -46,7 +49,7 @@ public class HandlingService {
         CheckKey playerCheckDataKey = new CheckKey(player.getUniqueId(), checkType);
         CheckData checkData = playerCheckData.get(playerCheckDataKey);
         if (checkData == null) {
-            checkData = new CheckData(System.currentTimeMillis(), -2);
+            checkData = new CheckData(System.currentTimeMillis(), DEFAULT_REPETITION_COUNT);
         } else {
             checkData = new CheckData(System.currentTimeMillis(), checkData.repetitionCount);
         }
@@ -55,7 +58,7 @@ public class HandlingService {
 
     public int getRepetitionCountForPlayer(Player player, CheckType checkType) {
         CheckData checkData = playerCheckData.get(new CheckKey(player.getUniqueId(), checkType));
-        if (checkData == null) return -2;
+        if (checkData == null) return DEFAULT_REPETITION_COUNT;
         return checkData.repetitionCount;
     }
 
@@ -63,7 +66,7 @@ public class HandlingService {
         CheckKey playerCheckDataKey = new CheckKey(player.getUniqueId(), checkType);
         CheckData checkData = playerCheckData.get(playerCheckDataKey);
         if (checkData == null) {
-            checkData = new CheckData(0, repetitionCount);
+            checkData = new CheckData(DEFAULT_LAST_SENT, repetitionCount);
         } else {
             checkData = new CheckData(checkData.lastSent, repetitionCount);
         }
