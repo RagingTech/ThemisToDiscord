@@ -6,11 +6,13 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class HandlingService {
+    private record CheckKey(UUID uuid, CheckType checkType) {}
     private record CheckData(long lastSent, int repetitionCount) {}
 
-    private final Map<String, CheckData> playerCheckData = new HashMap<>();
+    private final Map<CheckKey, CheckData> playerCheckData = new HashMap<>();
 
     private final double executionThreshold;
     private final double repetitionDelay;
@@ -34,18 +36,14 @@ public class HandlingService {
         return repetitionThreshold;
     }
 
-    private String getPlayerCheckDataKey(Player player, CheckType checkType) {
-        return player.getUniqueId() + ":" + checkType.name();
-    }
-
     public long getLastSentTimeForPlayer(Player player, CheckType checkType) {
-        CheckData checkData = playerCheckData.get(getPlayerCheckDataKey(player, checkType));
+        CheckData checkData = playerCheckData.get(new CheckKey(player.getUniqueId(), checkType));
         if (checkData == null) return 0;
         return checkData.lastSent;
     }
 
     public void updateLastSentTimeForPlayer(Player player, CheckType checkType) {
-        String playerCheckDataKey = getPlayerCheckDataKey(player, checkType);
+        CheckKey playerCheckDataKey = new CheckKey(player.getUniqueId(), checkType);
         CheckData checkData = playerCheckData.get(playerCheckDataKey);
         if (checkData == null) {
             checkData = new CheckData(System.currentTimeMillis(), -2);
@@ -56,13 +54,13 @@ public class HandlingService {
     }
 
     public int getRepetitionCountForPlayer(Player player, CheckType checkType) {
-        CheckData checkData = playerCheckData.get(getPlayerCheckDataKey(player, checkType));
+        CheckData checkData = playerCheckData.get(new CheckKey(player.getUniqueId(), checkType));
         if (checkData == null) return -2;
         return checkData.repetitionCount;
     }
 
     public void putRepetitionCountForPlayer(Player player, CheckType checkType, int repetitionCount) {
-        String playerCheckDataKey = getPlayerCheckDataKey(player, checkType);
+        CheckKey playerCheckDataKey = new CheckKey(player.getUniqueId(), checkType);
         CheckData checkData = playerCheckData.get(playerCheckDataKey);
         if (checkData == null) {
             checkData = new CheckData(0, repetitionCount);
