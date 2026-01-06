@@ -1,6 +1,5 @@
 package xyz.earthcow.themistodiscord;
 
-import com.gmail.olexorus.themis.api.CheckType;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -33,11 +32,7 @@ public class Message {
     private final String webhookJson;
 
     @Nullable
-    private final Section handling;
-
-    // For use with handling
-    private final HashMap<UUID, HashMap<CheckType, Long>> lastSentTimesPerPlayer = new HashMap<>();
-    private final HashMap<UUID, HashMap<CheckType, Integer>> repetitionCountersPerPlayer = new HashMap<>();
+    private final HandlingService handling;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -72,9 +67,13 @@ public class Message {
             this.webhookJson = getJsonWebhook();
         }
 
-        // Define the handling section
-        this.handling = message.getSection("Handling", null);
-
+        // Define the handling service
+        Section handlingSection = message.getSection("Handling", null);
+        if (handlingSection != null && handlingSection.getBoolean("Enabled", false)) {
+            this.handling = new HandlingService(handlingSection);
+        } else {
+            this.handling = null;
+        }
     }
 
     private String getJsonWebhook() {
@@ -240,7 +239,7 @@ public class Message {
         return name;
     }
 
-    public @Nullable Section getHandling() {
+    public @Nullable HandlingService getHandlingService() {
         return handling;
     }
 
@@ -250,34 +249,6 @@ public class Message {
         if (unsentMessages > 0) {
             ttd.log(LogLevel.WARN, unsentMessages + " messages were cancelled. For message: " + name);
         }
-    }
-
-    public long getLastSentTimeForPlayer(Player player, CheckType checkType) {
-        HashMap<CheckType, Long> times = lastSentTimesPerPlayer.get(player.getUniqueId());
-        if (times == null) {
-            return 0;
-        }
-        return times.getOrDefault(checkType, 0L);
-    }
-
-    public void updateLastSentTimeForPlayer(Player player, CheckType checkType) {
-        HashMap<CheckType, Long> times = lastSentTimesPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
-        times.put(checkType, System.currentTimeMillis());
-        lastSentTimesPerPlayer.put(player.getUniqueId(), times);
-    }
-
-    public int getRepetitionCountForPlayer(Player player, CheckType checkType) {
-        HashMap<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.get(player.getUniqueId());
-        if (repetitionCounts == null) {
-            return -2;
-        }
-        return repetitionCounts.getOrDefault(checkType, -2);
-    }
-
-    public void putRepetitionCountForPlayer(Player player, CheckType checkType, int repetitionCount) {
-        HashMap<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
-        repetitionCounts.put(checkType, repetitionCount);
-        repetitionCountersPerPlayer.put(player.getUniqueId(), repetitionCounts);
     }
 
 }

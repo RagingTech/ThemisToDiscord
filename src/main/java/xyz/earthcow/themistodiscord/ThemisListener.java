@@ -40,29 +40,29 @@ public class ThemisListener implements Listener {
         double score = Math.round(ThemisApi.getViolationScore(player, checkType) * 100.0) / 100.0;
 
         for (Message message : config.getMessages()) {
-            Section handling = message.getHandling();
+            HandlingService handling = message.getHandlingService();
 
-            if (handling == null || !handling.getBoolean("Enabled", false)) {
+            if (handling == null) {
                 continue;
             }
 
-            if (handling.getDouble("execution-threshold") > score
-                || handling.getDouble("repetition-delay") > ((System.currentTimeMillis() - message.getLastSentTimeForPlayer(player, checkType)) / 1000.0))
+            if (handling.getExecutionThreshold() > score
+                || handling.getRepetitionDelay() > ((System.currentTimeMillis() - handling.getLastSentTimeForPlayer(player, checkType)) / 1000.0))
                 continue;
 
-            int repetitionCounterForCheckType = message.getRepetitionCountForPlayer(player, checkType) + 1;
+            int repetitionCounterForCheckType = handling.getRepetitionCountForPlayer(player, checkType) + 1;
 
-            if (repetitionCounterForCheckType == handling.getDouble("repetition-threshold")) {
-                message.putRepetitionCountForPlayer(player, checkType, -1);
+            if (repetitionCounterForCheckType == handling.getRepetitionThreshold()) {
+                handling.putRepetitionCountForPlayer(player, checkType, -1);
                 repetitionCounterForCheckType = -1;
             } else {
-                message.putRepetitionCountForPlayer(player, checkType, repetitionCounterForCheckType);
+                handling.putRepetitionCountForPlayer(player, checkType, repetitionCounterForCheckType);
             }
 
             if (repetitionCounterForCheckType != -1) continue;
 
             message.execute(player, checkType.getDescription(), score, ping, tps, null);
-            message.updateLastSentTimeForPlayer(player, checkType);
+            handling.updateLastSentTimeForPlayer(player, checkType);
         }
     }
 }
