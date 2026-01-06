@@ -6,11 +6,11 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class HandlingService {
-    private final Map<UUID, Map<CheckType, Long>> lastSentTimesPerPlayer = new HashMap<>();
-    private final Map<UUID, Map<CheckType, Integer>> repetitionCountersPerPlayer = new HashMap<>();
+    private record CheckData(long lastSent, int repetitionCount) {}
+
+    private final Map<String, CheckData> playerCheckData = new HashMap<>();
 
     private final double executionThreshold;
     private final double repetitionDelay;
@@ -34,31 +34,41 @@ public class HandlingService {
         return repetitionThreshold;
     }
 
+    private String getPlayerCheckDataKey(Player player, CheckType checkType) {
+        return player.getUniqueId() + ":" + checkType.name();
+    }
+
     public long getLastSentTimeForPlayer(Player player, CheckType checkType) {
-        Map<CheckType, Long> times = lastSentTimesPerPlayer.get(player.getUniqueId());
-        if (times == null) {
-            return 0;
-        }
-        return times.getOrDefault(checkType, 0L);
+        CheckData checkData = playerCheckData.get(getPlayerCheckDataKey(player, checkType));
+        if (checkData == null) return 0;
+        return checkData.lastSent;
     }
 
     public void updateLastSentTimeForPlayer(Player player, CheckType checkType) {
-        Map<CheckType, Long> times = lastSentTimesPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
-        times.put(checkType, System.currentTimeMillis());
-        lastSentTimesPerPlayer.put(player.getUniqueId(), times);
+        String playerCheckDataKey = getPlayerCheckDataKey(player, checkType);
+        CheckData checkData = playerCheckData.get(playerCheckDataKey);
+        if (checkData == null) {
+            checkData = new CheckData(System.currentTimeMillis(), -2);
+        } else {
+            checkData = new CheckData(System.currentTimeMillis(), checkData.repetitionCount);
+        }
+        playerCheckData.put(playerCheckDataKey, checkData);
     }
 
     public int getRepetitionCountForPlayer(Player player, CheckType checkType) {
-        Map<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.get(player.getUniqueId());
-        if (repetitionCounts == null) {
-            return -2;
-        }
-        return repetitionCounts.getOrDefault(checkType, -2);
+        CheckData checkData = playerCheckData.get(getPlayerCheckDataKey(player, checkType));
+        if (checkData == null) return -2;
+        return checkData.repetitionCount;
     }
 
     public void putRepetitionCountForPlayer(Player player, CheckType checkType, int repetitionCount) {
-        Map<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
-        repetitionCounts.put(checkType, repetitionCount);
-        repetitionCountersPerPlayer.put(player.getUniqueId(), repetitionCounts);
+        String playerCheckDataKey = getPlayerCheckDataKey(player, checkType);
+        CheckData checkData = playerCheckData.get(playerCheckDataKey);
+        if (checkData == null) {
+            checkData = new CheckData(0, repetitionCount);
+        } else {
+            checkData = new CheckData(checkData.lastSent, repetitionCount);
+        }
+        playerCheckData.put(playerCheckDataKey, checkData);
     }
 }
