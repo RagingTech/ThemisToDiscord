@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HandlingService {
     private record CheckKey(UUID uuid, CheckType checkType) {}
-    private record CheckData(long lastSent, int repetitionCount) {}
+    private record CheckData(long lastSent, double repetitionCount) {}
 
     private final Cache<CheckKey, CheckData> playerCheckData;
 
@@ -20,8 +20,8 @@ public class HandlingService {
     private final double repetitionDelay;
     private final double repetitionThreshold;
 
-    private static final long DEFAULT_LAST_SENT = 0;
-    private static final int DEFAULT_REPETITION_COUNT = -2;
+    private static final long DEFAULT_LAST_SENT = 0L;
+    private static final double DEFAULT_REPETITION_COUNT = 0.0;
 
     public HandlingService(@NotNull Section handlingSection, @NotNull String msgName, @NotNull ThemisToDiscord ttd) {
         double localExecutionThreshold = handlingSection.getDouble("execution-threshold");
@@ -77,13 +77,13 @@ public class HandlingService {
         playerCheckData.put(playerCheckDataKey, checkData);
     }
 
-    public int getRepetitionCountForPlayer(Player player, CheckType checkType) {
+    public double getRepetitionCountForPlayer(Player player, CheckType checkType) {
         CheckData checkData = playerCheckData.getIfPresent(new CheckKey(player.getUniqueId(), checkType));
         if (checkData == null) return DEFAULT_REPETITION_COUNT;
         return checkData.repetitionCount;
     }
 
-    public void putRepetitionCountForPlayer(Player player, CheckType checkType, int repetitionCount) {
+    public void putRepetitionCountForPlayer(Player player, CheckType checkType, double repetitionCount) {
         CheckKey playerCheckDataKey = new CheckKey(player.getUniqueId(), checkType);
         CheckData checkData = playerCheckData.getIfPresent(playerCheckDataKey);
         if (checkData == null) {

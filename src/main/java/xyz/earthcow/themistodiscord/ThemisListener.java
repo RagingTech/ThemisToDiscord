@@ -50,19 +50,18 @@ public class ThemisListener implements Listener {
                 || handling.getRepetitionDelay() > ((System.currentTimeMillis() - handling.getLastSentTimeForPlayer(player, checkType)) / 1000.0))
                 continue;
 
-            int repetitionCounterForCheckType = handling.getRepetitionCountForPlayer(player, checkType) + 1;
+            double currentRepCount = handling.getRepetitionCountForPlayer(player, checkType) + 1.0;
 
-            if (repetitionCounterForCheckType == handling.getRepetitionThreshold()) {
-                handling.putRepetitionCountForPlayer(player, checkType, -1);
-                repetitionCounterForCheckType = -1;
+            if (currentRepCount >= handling.getRepetitionThreshold()) {
+                message.execute(player, checkType.getDescription(), score, ping, tps, null);
+                handling.updateLastSentTimeForPlayer(player, checkType);
+
+                // Reset the counter
+                handling.putRepetitionCountForPlayer(player, checkType, 0);
             } else {
-                handling.putRepetitionCountForPlayer(player, checkType, repetitionCounterForCheckType);
+                // Update the counter
+                handling.putRepetitionCountForPlayer(player, checkType, currentRepCount);
             }
-
-            if (repetitionCounterForCheckType != -1) continue;
-
-            message.execute(player, checkType.getDescription(), score, ping, tps, null);
-            handling.updateLastSentTimeForPlayer(player, checkType);
         }
     }
 }
