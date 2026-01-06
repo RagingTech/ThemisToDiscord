@@ -5,11 +5,12 @@ import dev.dejvokep.boostedyaml.block.implementation.Section;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class HandlingService {
-    private final HashMap<UUID, HashMap<CheckType, Long>> lastSentTimesPerPlayer = new HashMap<>();
-    private final HashMap<UUID, HashMap<CheckType, Integer>> repetitionCountersPerPlayer = new HashMap<>();
+    private final Map<UUID, Map<CheckType, Long>> lastSentTimesPerPlayer = new HashMap<>();
+    private final Map<UUID, Map<CheckType, Integer>> repetitionCountersPerPlayer = new HashMap<>();
 
     private final double executionThreshold;
     private final double repetitionDelay;
@@ -34,7 +35,7 @@ public class HandlingService {
     }
 
     public long getLastSentTimeForPlayer(Player player, CheckType checkType) {
-        HashMap<CheckType, Long> times = lastSentTimesPerPlayer.get(player.getUniqueId());
+        Map<CheckType, Long> times = lastSentTimesPerPlayer.get(player.getUniqueId());
         if (times == null) {
             return 0;
         }
@@ -42,13 +43,13 @@ public class HandlingService {
     }
 
     public void updateLastSentTimeForPlayer(Player player, CheckType checkType) {
-        HashMap<CheckType, Long> times = lastSentTimesPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
+        Map<CheckType, Long> times = lastSentTimesPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
         times.put(checkType, System.currentTimeMillis());
         lastSentTimesPerPlayer.put(player.getUniqueId(), times);
     }
 
     public int getRepetitionCountForPlayer(Player player, CheckType checkType) {
-        HashMap<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.get(player.getUniqueId());
+        Map<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.get(player.getUniqueId());
         if (repetitionCounts == null) {
             return -2;
         }
@@ -56,7 +57,7 @@ public class HandlingService {
     }
 
     public void putRepetitionCountForPlayer(Player player, CheckType checkType, int repetitionCount) {
-        HashMap<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
+        Map<CheckType, Integer> repetitionCounts = repetitionCountersPerPlayer.getOrDefault(player.getUniqueId(), new HashMap<>());
         repetitionCounts.put(checkType, repetitionCount);
         repetitionCountersPerPlayer.put(player.getUniqueId(), repetitionCounts);
     }
