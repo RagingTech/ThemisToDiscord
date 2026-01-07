@@ -17,6 +17,7 @@ repositories {
 dependencies {
     implementation(libs.dev.dejvokep.boosted.yaml)
     implementation(libs.com.github.earthcow.javadiscordwebhook)
+    implementation(libs.org.bstats.bstats.api)
 
     compileOnly(files("libs/ThemisAPI.jar"))
     compileOnly(libs.org.spigotmc.spigot.api)
@@ -53,6 +54,7 @@ tasks.shadowJar {
     archiveClassifier.set("")
     // Relocate shaded dependencies to internal libs directory
     relocate("dev.dejvokep.boostedyaml", "xyz.earthcow.themistodiscord.libs.boostedyaml")
+    relocate("org.bstats", "xyz.earthcow.themistodiscord.libs.bstats")
     // Exclude annotation packages from the uber jar file
     exclude("org/intellij/**", "org/jetbrains/**")
 }

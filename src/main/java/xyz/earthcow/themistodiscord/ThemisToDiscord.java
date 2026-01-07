@@ -1,5 +1,7 @@
 package xyz.earthcow.themistodiscord;
 
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -23,6 +25,10 @@ public final class ThemisToDiscord extends JavaPlugin {
         Objects.requireNonNull(getCommand("ttd")).setTabCompleter(ttdCommand);
 
         getServer().getPluginManager().registerEvents(new ThemisListener(this, config), this);
+
+        int pluginId = 28743;
+        Metrics metrics = new Metrics(this, pluginId);
+        metrics.addCustomChart(new SimplePie("message_count", () -> String.valueOf(config.getMessages().size())));
     }
 
     @Override
