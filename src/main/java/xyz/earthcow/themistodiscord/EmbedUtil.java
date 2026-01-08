@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 
 public class EmbedUtil {

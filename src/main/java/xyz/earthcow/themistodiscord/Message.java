@@ -8,11 +8,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
-import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,6 +34,7 @@ public class Message {
     @Nullable
     private final HandlingService handling;
 
+    @NotNull
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Nullable
@@ -137,7 +138,9 @@ public class Message {
         // Using a single thread executor ensures messages are not concurrently modified and sent in succession
         executor.submit(() -> {
             try {
-                String jsonPayload = utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps);
+                String jsonPayload = Objects.requireNonNull(
+                        utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps)
+                );
                 if (originalTimestamp != null) {
                     jsonPayload = jsonPayload.replace(originalTimestamp, (new Date()).toInstant().toString());
                 }
@@ -146,7 +149,7 @@ public class Message {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }
             } catch (IOException e) {
-                String msg = null;
+                String msg;
                 if (e instanceof FileNotFoundException) {
                     msg = "Your webhook url is not valid! Update it with /ttd url <url>!";
                 } else {

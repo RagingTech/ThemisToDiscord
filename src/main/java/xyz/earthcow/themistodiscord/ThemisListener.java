@@ -3,7 +3,6 @@ package xyz.earthcow.themistodiscord;
 import com.gmail.olexorus.themis.api.CheckType;
 import com.gmail.olexorus.themis.api.ThemisApi;
 import com.gmail.olexorus.themis.api.ViolationEvent;
-import dev.dejvokep.boostedyaml.block.implementation.Section;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
