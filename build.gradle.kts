@@ -26,7 +26,7 @@ dependencies {
 }
 
 group = "xyz.earthcow"
-version = "0.3.0"
+version = "0.3.1"
 
 tasks.withType<JavaCompile>() {
     options.encoding = "UTF-8"
