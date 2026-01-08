@@ -59,7 +59,7 @@ public class Utils {
                 .replace("%player_name%", player.getName())
                 .replace("%player_uuid%", player.getUniqueId().toString())
                 .replace("%detection_type%", detectionType)
-                .replace("%category_color%", hexToInteger(config.getString("categoryColors." + detectionType)).toString())
+                .replace("%category_color%", hexToInteger(config.getString("categoryColors." + detectionType, "")).toString())
                 .replace("%score%", Double.toString(score))
                 .replace("%ping%", Double.toString(ping))
                 .replace("%tps%", Double.toString(tps));
