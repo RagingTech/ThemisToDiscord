@@ -11,6 +11,7 @@ import xyz.earthcow.discordwebhook.DiscordWebhook;
 import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +35,9 @@ public class Message {
     private final HandlingService handling;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @Nullable
+    private String originalTimestamp;
 
     public Message(@NotNull ThemisToDiscord ttd, @NotNull Utils utils, @NotNull Section message) {
         this.ttd = ttd;
@@ -121,7 +125,9 @@ public class Message {
 
         // Set the timestamp
         if (embedSection.getBoolean("Timestamp")) {
-            embed.setTimestamp((new Date()).toInstant());
+            TemporalAccessor ta = (new Date()).toInstant();
+            embed.setTimestamp(ta);
+            this.originalTimestamp = ta.toString();
         }
 
         return embed;
@@ -131,7 +137,11 @@ public class Message {
         // Using a single thread executor ensures messages are not concurrently modified and sent in succession
         executor.submit(() -> {
             try {
-                DiscordWebhook.execute(webhookUrl, utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps));
+                String jsonPayload = utils.handleAllPlaceholders(webhookJson, player, detectionType, score, ping, tps);
+                if (originalTimestamp != null) {
+                    jsonPayload = jsonPayload.replace(originalTimestamp, (new Date()).toInstant().toString());
+                }
+                DiscordWebhook.execute(webhookUrl, jsonPayload);
                 if (sender != null) {
                     sender.sendMessage(ChatColor.GREEN + "Message: " + name + ", was sent!");
                 }
