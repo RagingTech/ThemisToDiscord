@@ -8,12 +8,15 @@ import org.jetbrains.annotations.Nullable;
 import xyz.earthcow.discordwebhook.DiscordWebhook;
 
 public class Utils {
+    @NotNull
+    private ThemisToDiscord ttd;
     @Nullable
     private FloodgateApi floodgateApi;
     @NotNull
     private final YamlDocument config;
 
     public Utils(@NotNull ThemisToDiscord ttd, @NotNull YamlDocument configDocument) {
+        this.ttd = ttd;
         if (ttd.getServer().getPluginManager().isPluginEnabled("Floodgate")) {
             ttd.log("Found Floodgate! Enabling features...");
             floodgateApi = FloodgateApi.getInstance();
@@ -66,6 +69,8 @@ public class Utils {
         try {
             return Integer.parseInt(hex.replace("#", ""), 16);
         } catch (NumberFormatException e) {
+            ttd.log(LogLevel.WARN, "Invalid color string: " + hex +  ". Using black.");
+            ttd.log(LogLevel.DEBUG, "Exception: " + e);
             return 0;
         }
     }
