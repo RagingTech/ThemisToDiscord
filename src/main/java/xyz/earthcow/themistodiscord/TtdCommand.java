@@ -15,6 +15,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class TtdCommand implements CommandExecutor, TabCompleter {
+    @NotNull
+    private final Configuration config;
+    
+    public TtdCommand(@NotNull Configuration config) {
+        this.config = config;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
@@ -27,14 +33,14 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 String webhookUrl = args[1];
-                if (ThemisToDiscord.isInvalidWebhookUrl(webhookUrl)) {
+                if (Utils.isInvalidWebhookUrl(webhookUrl)) {
                     sender.sendMessage(ChatColor.RED + "That is not a valid webhook url!");
                     return true;
                 }
-                ThemisToDiscord.config.get().set("webhookUrl", webhookUrl);
-                ThemisToDiscord.config.save();
+                config.get().set("webhookUrl", webhookUrl);
+                config.save();
                 // Re-evaluate config messages for changes in webhook url
-                ThemisToDiscord.config.reload();
+                config.reload();
                 sender.sendMessage(ChatColor.GREEN + "Successfully set the webhook url!");
                 break;
             case "msg":
@@ -43,7 +49,7 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                Message message = ThemisToDiscord.config.getMessages().stream().filter(msg -> msg.getName().equals(args[1])).findFirst().orElse(null);
+                Message message = config.getMessages().stream().filter(msg -> msg.getName().equals(args[1])).findFirst().orElse(null);
                 if (message == null) {
                     sender.sendMessage(ChatColor.RED + "The message: " + args[1] + " does not exist!");
                     return true;
@@ -78,7 +84,7 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
                 message.execute(player, type, score, ping, tps, (sender instanceof Player) ? sender : null);
                 break;
             case "reload":
-                ThemisToDiscord.config.reload();
+                config.reload();
                 sender.sendMessage(ChatColor.GREEN + "Successfully reloaded the configuration file!");
                 break;
             default:
@@ -135,7 +141,7 @@ public class TtdCommand implements CommandExecutor, TabCompleter {
 
         if (args[0].equalsIgnoreCase("msg")) {
             if (args.length == 2) {
-                return ThemisToDiscord.config.getMessages().stream().map(Message::getName).collect(Collectors.toList());
+                return config.getMessages().stream().map(Message::getName).collect(Collectors.toList());
             }
 
             List<String> completions = new ArrayList<>();

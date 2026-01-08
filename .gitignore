@@ -14,5 +14,9 @@ out/
 # Maven
 target/
 
+# Gradle
+.gradle/
+build/
+
 # Common working directory
 run/

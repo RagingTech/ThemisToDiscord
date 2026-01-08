@@ -6,6 +6,7 @@ import dev.dejvokep.boostedyaml.settings.dumper.DumperSettings;
 import dev.dejvokep.boostedyaml.settings.general.GeneralSettings;
 import dev.dejvokep.boostedyaml.settings.loader.LoaderSettings;
 import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,40 +15,44 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Configuration {
-    private YamlDocument config;
+    @NotNull
+    private final ThemisToDiscord ttd;
+    @NotNull
+    private final YamlDocument config;
+    @NotNull
+    private final Utils utils;
 
     private Set<Message> messages;
 
-    public Configuration() {
-        ThemisToDiscord plugin = ThemisToDiscord.instance;
+    public Configuration(@NotNull ThemisToDiscord ttd) throws IOException {
+        this.ttd = ttd;
 
-        try {
-            config = YamlDocument.create(
-                    new File(plugin.getDataFolder(), "config.yml"),
-                    Objects.requireNonNull(plugin.getResource("config.yml")),
-                    GeneralSettings.DEFAULT,
-                    LoaderSettings.builder().setAutoUpdate(true).build(), DumperSettings.DEFAULT,
-                    UpdaterSettings.builder().setVersioning(new BasicVersioning("config-version"))
-                            .setOptionSorting(UpdaterSettings.OptionSorting.SORT_BY_DEFAULTS)
-                            .build()
-            );
+        config = YamlDocument.create(
+                new File(ttd.getDataFolder(), "config.yml"),
+                Objects.requireNonNull(ttd.getResource("config.yml")),
+                GeneralSettings.DEFAULT,
+                LoaderSettings.builder().setAutoUpdate(true).build(), DumperSettings.DEFAULT,
+                UpdaterSettings.builder().setVersioning(new BasicVersioning("config-version"))
+                        .setOptionSorting(UpdaterSettings.OptionSorting.SORT_BY_DEFAULTS)
+                        .build()
+        );
+        config.update();
+        config.save();
 
-            config.update();
-            config.save();
-            load();
-        } catch (IOException e){
-            ThemisToDiscord.log(LogLevel.ERROR, "Could not create/load plugin config, disabling! Additional info: \n" + e);
-            plugin.getPluginLoader().disablePlugin(plugin);
-            return;
-        }
+        this.utils = new Utils(ttd, config);
 
-        if (ThemisToDiscord.isInvalidWebhookUrl(config.getString("webhookUrl"))) {
-            ThemisToDiscord.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
-        }
+        load();
     }
 
     private void load() {
-        messages = config.getSection("Messages").getRoutesAsStrings(false).stream().map(route -> new Message(config.getSection("Messages").getSection(route))).collect(Collectors.toSet());
+        messages = config.getSection("Messages").getRoutesAsStrings(false).stream()
+                .map(route ->
+                        new Message(ttd, utils, config.getSection("Messages").getSection(route))
+                )
+                .collect(Collectors.toSet());
+        if (Utils.isInvalidWebhookUrl(config.getString("webhookUrl"))) {
+            ttd.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
+        }
     }
 
     public YamlDocument get() {
@@ -62,7 +67,7 @@ public class Configuration {
         try {
             config.save();
         } catch (IOException e) {
-            ThemisToDiscord.log(LogLevel.ERROR, "Failed to save plugin config! Additional info: \n" + e);
+            ttd.log(LogLevel.ERROR, "Failed to save plugin config! Additional info: \n" + e);
         }
     }
 
@@ -73,11 +78,8 @@ public class Configuration {
             }
             config.reload();
             load();
-            if (ThemisToDiscord.isInvalidWebhookUrl(config.getString("webhookUrl"))) {
-                ThemisToDiscord.log(LogLevel.WARN, "Webhook url is missing or invalid! Set one using /ttd url <url>");
-            }
         } catch (IOException e) {
-            ThemisToDiscord.log(LogLevel.ERROR, "Failed to reload plugin config! Additional info: \n" + e);
+            ttd.log(LogLevel.ERROR, "Failed to reload plugin config! Additional info: \n" + e);
         }
     }
 
