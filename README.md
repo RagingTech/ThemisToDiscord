@@ -1,6 +1,13 @@
 # ThemisToDiscord
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/RagingTech/ThemisToDiscord?color=blue)
+![zlib license](https://img.shields.io/badge/license-zlib-orange)
+![GitHub downloads](https://img.shields.io/github/downloads/RagingTech/ThemisToDiscord/total?label=GitHub%20downloads)
+[![SpigotMC downloads](https://img.shields.io/spiget/downloads/114051?label=SpigotMC%20downloads)](https://www.spigotmc.org/resources/114051/)
+
 Sends an embedded Themis notification to a discord webhook.
+
+**This is an unofficial addon and is not affiliated with the Themis project in any compacity.**
 
 ## Installation
 
